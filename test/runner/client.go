@@ -19,10 +19,26 @@ import (
 	atomixk8s "github.com/atomix/atomix-k8s-controller/pkg/client/clientset/versioned"
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
 )
+
+// getKubeConfig returns the current k8s context configuration
+func getKubeConfig() (*rest.Config, error) {
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		home := homeDir()
+		if home == "" {
+			return nil, errors.New("no home directory configured")
+		}
+		kubeconfig = filepath.Join(home, ".kube", "config")
+	}
+
+	// use the current context in kubeconfig
+	return clientcmd.BuildConfigFromFlags("", kubeconfig)
+}
 
 // newKubeClient returns a new Kubernetes client from the environment
 func newKubeClient() (*kubernetes.Clientset, error) {

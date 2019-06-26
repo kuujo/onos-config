@@ -34,7 +34,7 @@ func init() {
 // GetCommand returns a Cobra command for tests in the given test registry
 func GetCommand(registry *TestRegistry) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "onit {create,add,remove,delete,get,set,run} [args]",
+		Use:   "onit {create,add,remove,delete,get,set,sh,run} [args]",
 		Short: "Run onos-config integration tests on Kubernetes",
 	}
 	cmd.AddCommand(getCreateCommand())
@@ -44,6 +44,7 @@ func GetCommand(registry *TestRegistry) *cobra.Command {
 	cmd.AddCommand(getRunCommand())
 	cmd.AddCommand(getGetCommand(registry))
 	cmd.AddCommand(getSetCommand())
+	cmd.AddCommand(getShCommand())
 	cmd.AddCommand(getTestCommand(registry))
 	return cmd
 }
@@ -741,6 +742,48 @@ func printHistory(records []TestRecord) {
 		fmt.Fprintln(writer, fmt.Sprintf("%s\t%s\t%s\t%d\t%s", record.TestId, args, record.Status, record.ExitCode, record.Message))
 	}
 	writer.Flush()
+}
+
+// getShCommand returns a cobra "join" command to log in to the given node
+func getShCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sh {node}",
+		Short: "Open a shell session on a running node",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			// Load the onit configuration from disk
+			config, err := LoadConfig()
+			if err != nil {
+				exitError(err)
+			}
+
+			// Get the cluster ID
+			clusterId, err := cmd.Flags().GetString("cluster")
+			if err != nil {
+				exitError(err)
+			}
+
+			// Get the default cluster configuration
+			cluster, err := config.getClusterConfig(clusterId)
+			if err != nil {
+				exitError(err)
+			}
+
+			// Get the test cluster controller from the cluster configuration
+			controller, err := GetClusterController(clusterId, cluster)
+			if err != nil {
+				exitError(err)
+			}
+
+			// Open the shell session
+			if err := controller.OpenShell(args[0]); err != nil {
+				exitError(err)
+			}
+		},
+	}
+
+	cmd.Flags().StringP("cluster", "c", getDefaultCluster(), "the cluster for which to load the history")
+	return cmd
 }
 
 // getGetLogsCommand returns a cobra command to output the logs for a specific resource

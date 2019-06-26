@@ -23,7 +23,10 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/remotecommand"
 	log "k8s.io/klog"
+	"os"
 	"time"
 )
 
@@ -168,6 +171,46 @@ func (c *ClusterController) getLogs(pod corev1.Pod) ([]string, error) {
 		logs = append(logs, scanner.Text())
 	}
 	return logs, nil
+}
+
+// OpenShell opens a shell session to the given resource
+func (c *ClusterController) OpenShell(resourceId string) error {
+	pod, err := c.kubeclient.CoreV1().Pods(c.ClusterId).Get(resourceId, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	container := pod.Spec.Containers[0]
+	req := c.kubeclient.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(pod.Name).
+		Namespace(pod.Namespace).
+		SubResource("exec").
+		Param("container", container.Name)
+	req.VersionedParams(&corev1.PodExecOptions{
+		Container: container.Name,
+		Command:   []string{"/bin/sh"},
+		Stdout:    true,
+		Stdin:     true,
+		TTY:       true,
+	}, scheme.ParameterCodec)
+
+	config, err := getKubeConfig()
+	if err != nil {
+		return err
+	}
+
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return err
+	}
+
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Tty:    true,
+	})
+	return err
 }
 
 // TeardownSimulator tears down a device simulator with the given name
