@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package onos.config.network;
+
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+import "github.com/onosproject/onos-config/pkg/store/change/change.proto";
+
+// Status is the status of a configuration object
+enum Status {
+    // PENDING indicates the configuration is waiting to be applied
+    PENDING = 0;
+
+    // APPLYING indicates the configuration is in the process of being applied
+    APPLYING = 1;
+
+    // SUCCEEDED indicates the configuration was applied successfully
+    SUCCEEDED = 2;
+
+    // FAILED indicates the configuration failed
+    FAILED = 3;
+}
+
+// Reason is a failure reason
+enum Reason {
+    // ERROR indicates an error occurred
+    ERROR = 0;
+
+    // UNAVAILABLE indicates the device was unavailable
+    UNAVAILABLE = 1;
+}
+
+// NetworkConfig specifies the configuration for a network change
+message NetworkConfig {
+    // id is the ID of the configuration
+    uint64 id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
+
+    uint64 revision = 2 [(gogoproto.casttype) = "Revision"];
+
+    // status is the current status of the configuration
+    Status status = 3;
+
+    // reason indicates the reason the configuration failed
+    Reason reason = 4;
+
+    // message is an optional status message
+    string message = 5;
+
+    // created is the time at which the configuration was created
+    google.protobuf.Timestamp created = 6 [(gogoproto.stdtime) = true];
+
+    // updated is the time at which the configuration was last updated
+    google.protobuf.Timestamp updated = 7 [(gogoproto.stdtime) = true];
+
+    // changes is a set of changes to apply
+    repeated onos.config.change.Value changes = 8;
+}
