@@ -10,126 +10,25 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/gogo/protobuf/types"
+	change "github.com/onosproject/onos-config/pkg/types/change"
+	network "github.com/onosproject/onos-config/pkg/types/network"
 	gnmi "github.com/openconfig/gnmi/proto/gnmi"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	math "math"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
-
-type ChangeValueType int32
-
-const (
-	ChangeValueType_EMPTY            ChangeValueType = 0
-	ChangeValueType_STRING           ChangeValueType = 1
-	ChangeValueType_INT              ChangeValueType = 2
-	ChangeValueType_UINT             ChangeValueType = 3
-	ChangeValueType_BOOL             ChangeValueType = 4
-	ChangeValueType_DECIMAL          ChangeValueType = 5
-	ChangeValueType_FLOAT            ChangeValueType = 6
-	ChangeValueType_BYTES            ChangeValueType = 7
-	ChangeValueType_LEAFLIST_STRING  ChangeValueType = 8
-	ChangeValueType_LEAFLIST_INT     ChangeValueType = 9
-	ChangeValueType_LEAFLIST_UINT    ChangeValueType = 10
-	ChangeValueType_LEAFLIST_BOOL    ChangeValueType = 11
-	ChangeValueType_LEAFLIST_DECIMAL ChangeValueType = 12
-	ChangeValueType_LEAFLIST_FLOAT   ChangeValueType = 13
-	ChangeValueType_LEAFLIST_BYTES   ChangeValueType = 14
-)
-
-var ChangeValueType_name = map[int32]string{
-	0:  "EMPTY",
-	1:  "STRING",
-	2:  "INT",
-	3:  "UINT",
-	4:  "BOOL",
-	5:  "DECIMAL",
-	6:  "FLOAT",
-	7:  "BYTES",
-	8:  "LEAFLIST_STRING",
-	9:  "LEAFLIST_INT",
-	10: "LEAFLIST_UINT",
-	11: "LEAFLIST_BOOL",
-	12: "LEAFLIST_DECIMAL",
-	13: "LEAFLIST_FLOAT",
-	14: "LEAFLIST_BYTES",
-}
-
-var ChangeValueType_value = map[string]int32{
-	"EMPTY":            0,
-	"STRING":           1,
-	"INT":              2,
-	"UINT":             3,
-	"BOOL":             4,
-	"DECIMAL":          5,
-	"FLOAT":            6,
-	"BYTES":            7,
-	"LEAFLIST_STRING":  8,
-	"LEAFLIST_INT":     9,
-	"LEAFLIST_UINT":    10,
-	"LEAFLIST_BOOL":    11,
-	"LEAFLIST_DECIMAL": 12,
-	"LEAFLIST_FLOAT":   13,
-	"LEAFLIST_BYTES":   14,
-}
-
-func (x ChangeValueType) String() string {
-	return proto.EnumName(ChangeValueType_name, int32(x))
-}
-
-func (ChangeValueType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{0}
-}
-
-// Streaming event type
-type Type int32
-
-const (
-	// NONE indicates this response does not represent a state change
-	Type_NONE Type = 0
-	// ADDED is an event which occurs when an item is added
-	Type_ADDED Type = 1
-	// UPDATED is an event which occurs when an item is updated
-	Type_UPDATED Type = 2
-	// REMOVED is an event which occurs when an item is removed
-	Type_REMOVED Type = 3
-)
-
-var Type_name = map[int32]string{
-	0: "NONE",
-	1: "ADDED",
-	2: "UPDATED",
-	3: "REMOVED",
-}
-
-var Type_value = map[string]int32{
-	"NONE":    0,
-	"ADDED":   1,
-	"UPDATED": 2,
-	"REMOVED": 3,
-}
-
-func (x Type) String() string {
-	return proto.EnumName(Type_name, int32(x))
-}
-
-func (Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{1}
-}
 
 // NetworkChangesRequest is a message for specifying GetNetworkChanges query parameters.
 type NetworkChangesRequest struct {
@@ -162,263 +61,19 @@ func (m *NetworkChangesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_NetworkChangesRequest proto.InternalMessageInfo
 
-// ConfigChange is a descriptor of a submitted configuration change targeted as a single device.
-type ConfigChange struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Hash                 string   `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ConfigChange) Reset()         { *m = ConfigChange{} }
-func (m *ConfigChange) String() string { return proto.CompactTextString(m) }
-func (*ConfigChange) ProtoMessage()    {}
-func (*ConfigChange) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{1}
-}
-func (m *ConfigChange) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ConfigChange.Unmarshal(m, b)
-}
-func (m *ConfigChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ConfigChange.Marshal(b, m, deterministic)
-}
-func (m *ConfigChange) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfigChange.Merge(m, src)
-}
-func (m *ConfigChange) XXX_Size() int {
-	return xxx_messageInfo_ConfigChange.Size(m)
-}
-func (m *ConfigChange) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfigChange.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfigChange proto.InternalMessageInfo
-
-func (m *ConfigChange) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *ConfigChange) GetHash() string {
-	if m != nil {
-		return m.Hash
-	}
-	return ""
-}
-
-// ChangeValue is an individual Path/Value combination in a Change
-type ChangeValue struct {
-	Path                 string          `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	Value                []byte          `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	ValueType            ChangeValueType `protobuf:"varint,3,opt,name=value_type,json=valueType,proto3,enum=proto.ChangeValueType" json:"value_type,omitempty"`
-	TypeOpts             []int32         `protobuf:"varint,4,rep,packed,name=type_opts,json=typeOpts,proto3" json:"type_opts,omitempty"`
-	Removed              bool            `protobuf:"varint,5,opt,name=removed,proto3" json:"removed,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
-	XXX_unrecognized     []byte          `json:"-"`
-	XXX_sizecache        int32           `json:"-"`
-}
-
-func (m *ChangeValue) Reset()         { *m = ChangeValue{} }
-func (m *ChangeValue) String() string { return proto.CompactTextString(m) }
-func (*ChangeValue) ProtoMessage()    {}
-func (*ChangeValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{2}
-}
-func (m *ChangeValue) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ChangeValue.Unmarshal(m, b)
-}
-func (m *ChangeValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ChangeValue.Marshal(b, m, deterministic)
-}
-func (m *ChangeValue) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ChangeValue.Merge(m, src)
-}
-func (m *ChangeValue) XXX_Size() int {
-	return xxx_messageInfo_ChangeValue.Size(m)
-}
-func (m *ChangeValue) XXX_DiscardUnknown() {
-	xxx_messageInfo_ChangeValue.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ChangeValue proto.InternalMessageInfo
-
-func (m *ChangeValue) GetPath() string {
-	if m != nil {
-		return m.Path
-	}
-	return ""
-}
-
-func (m *ChangeValue) GetValue() []byte {
-	if m != nil {
-		return m.Value
-	}
-	return nil
-}
-
-func (m *ChangeValue) GetValueType() ChangeValueType {
-	if m != nil {
-		return m.ValueType
-	}
-	return ChangeValueType_EMPTY
-}
-
-func (m *ChangeValue) GetTypeOpts() []int32 {
-	if m != nil {
-		return m.TypeOpts
-	}
-	return nil
-}
-
-func (m *ChangeValue) GetRemoved() bool {
-	if m != nil {
-		return m.Removed
-	}
-	return false
-}
-
-// Change is a descriptor of a submitted configuration change targeted at a single device.
-type Change struct {
-	Time                 *time.Time     `protobuf:"bytes,1,opt,name=time,proto3,stdtime" json:"time,omitempty"`
-	Id                   string         `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Desc                 string         `protobuf:"bytes,3,opt,name=desc,proto3" json:"desc,omitempty"`
-	ChangeValues         []*ChangeValue `protobuf:"bytes,4,rep,name=change_values,json=changeValues,proto3" json:"change_values,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
-	XXX_unrecognized     []byte         `json:"-"`
-	XXX_sizecache        int32          `json:"-"`
-}
-
-func (m *Change) Reset()         { *m = Change{} }
-func (m *Change) String() string { return proto.CompactTextString(m) }
-func (*Change) ProtoMessage()    {}
-func (*Change) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{3}
-}
-func (m *Change) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Change.Unmarshal(m, b)
-}
-func (m *Change) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Change.Marshal(b, m, deterministic)
-}
-func (m *Change) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Change.Merge(m, src)
-}
-func (m *Change) XXX_Size() int {
-	return xxx_messageInfo_Change.Size(m)
-}
-func (m *Change) XXX_DiscardUnknown() {
-	xxx_messageInfo_Change.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Change proto.InternalMessageInfo
-
-func (m *Change) GetTime() *time.Time {
-	if m != nil {
-		return m.Time
-	}
-	return nil
-}
-
-func (m *Change) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-func (m *Change) GetDesc() string {
-	if m != nil {
-		return m.Desc
-	}
-	return ""
-}
-
-func (m *Change) GetChangeValues() []*ChangeValue {
-	if m != nil {
-		return m.ChangeValues
-	}
-	return nil
-}
-
-// NetChange is a descriptor of a configuration change submitted via gNMI.
-type NetChange struct {
-	Time                 *time.Time      `protobuf:"bytes,1,opt,name=time,proto3,stdtime" json:"time,omitempty"`
-	Name                 string          `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	User                 string          `protobuf:"bytes,3,opt,name=user,proto3" json:"user,omitempty"`
-	Changes              []*ConfigChange `protobuf:"bytes,4,rep,name=changes,proto3" json:"changes,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
-	XXX_unrecognized     []byte          `json:"-"`
-	XXX_sizecache        int32           `json:"-"`
-}
-
-func (m *NetChange) Reset()         { *m = NetChange{} }
-func (m *NetChange) String() string { return proto.CompactTextString(m) }
-func (*NetChange) ProtoMessage()    {}
-func (*NetChange) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{4}
-}
-func (m *NetChange) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NetChange.Unmarshal(m, b)
-}
-func (m *NetChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NetChange.Marshal(b, m, deterministic)
-}
-func (m *NetChange) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NetChange.Merge(m, src)
-}
-func (m *NetChange) XXX_Size() int {
-	return xxx_messageInfo_NetChange.Size(m)
-}
-func (m *NetChange) XXX_DiscardUnknown() {
-	xxx_messageInfo_NetChange.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_NetChange proto.InternalMessageInfo
-
-func (m *NetChange) GetTime() *time.Time {
-	if m != nil {
-		return m.Time
-	}
-	return nil
-}
-
-func (m *NetChange) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *NetChange) GetUser() string {
-	if m != nil {
-		return m.User
-	}
-	return ""
-}
-
-func (m *NetChange) GetChanges() []*ConfigChange {
-	if m != nil {
-		return m.Changes
-	}
-	return nil
-}
-
 type ReadOnlySubPath struct {
-	SubPath              string          `protobuf:"bytes,1,opt,name=sub_path,json=subPath,proto3" json:"sub_path,omitempty"`
-	ValueType            ChangeValueType `protobuf:"varint,2,opt,name=value_type,json=valueType,proto3,enum=proto.ChangeValueType" json:"value_type,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
-	XXX_unrecognized     []byte          `json:"-"`
-	XXX_sizecache        int32           `json:"-"`
+	SubPath              string           `protobuf:"bytes,1,opt,name=sub_path,json=subPath,proto3" json:"sub_path,omitempty"`
+	ValueType            change.ValueType `protobuf:"varint,2,opt,name=value_type,json=valueType,proto3,enum=onos.config.change.ValueType" json:"value_type,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
 }
 
 func (m *ReadOnlySubPath) Reset()         { *m = ReadOnlySubPath{} }
 func (m *ReadOnlySubPath) String() string { return proto.CompactTextString(m) }
 func (*ReadOnlySubPath) ProtoMessage()    {}
 func (*ReadOnlySubPath) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{5}
+	return fileDescriptor_9081d84c442224d8, []int{1}
 }
 func (m *ReadOnlySubPath) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ReadOnlySubPath.Unmarshal(m, b)
@@ -445,11 +100,11 @@ func (m *ReadOnlySubPath) GetSubPath() string {
 	return ""
 }
 
-func (m *ReadOnlySubPath) GetValueType() ChangeValueType {
+func (m *ReadOnlySubPath) GetValueType() change.ValueType {
 	if m != nil {
 		return m.ValueType
 	}
-	return ChangeValueType_EMPTY
+	return change.ValueType_EMPTY
 }
 
 type ReadOnlyPath struct {
@@ -464,7 +119,7 @@ func (m *ReadOnlyPath) Reset()         { *m = ReadOnlyPath{} }
 func (m *ReadOnlyPath) String() string { return proto.CompactTextString(m) }
 func (*ReadOnlyPath) ProtoMessage()    {}
 func (*ReadOnlyPath) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{6}
+	return fileDescriptor_9081d84c442224d8, []int{2}
 }
 func (m *ReadOnlyPath) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ReadOnlyPath.Unmarshal(m, b)
@@ -499,24 +154,24 @@ func (m *ReadOnlyPath) GetSubPath() []*ReadOnlySubPath {
 }
 
 type ReadWritePath struct {
-	Path                 string          `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	ValueType            ChangeValueType `protobuf:"varint,2,opt,name=value_type,json=valueType,proto3,enum=proto.ChangeValueType" json:"value_type,omitempty"`
-	Units                string          `protobuf:"bytes,3,opt,name=units,proto3" json:"units,omitempty"`
-	Description          string          `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	Mandatory            bool            `protobuf:"varint,5,opt,name=mandatory,proto3" json:"mandatory,omitempty"`
-	Default              string          `protobuf:"bytes,6,opt,name=default,proto3" json:"default,omitempty"`
-	Range                []string        `protobuf:"bytes,7,rep,name=range,proto3" json:"range,omitempty"`
-	Length               []string        `protobuf:"bytes,8,rep,name=length,proto3" json:"length,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
-	XXX_unrecognized     []byte          `json:"-"`
-	XXX_sizecache        int32           `json:"-"`
+	Path                 string           `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	ValueType            change.ValueType `protobuf:"varint,2,opt,name=value_type,json=valueType,proto3,enum=onos.config.change.ValueType" json:"value_type,omitempty"`
+	Units                string           `protobuf:"bytes,3,opt,name=units,proto3" json:"units,omitempty"`
+	Description          string           `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	Mandatory            bool             `protobuf:"varint,5,opt,name=mandatory,proto3" json:"mandatory,omitempty"`
+	Default              string           `protobuf:"bytes,6,opt,name=default,proto3" json:"default,omitempty"`
+	Range                []string         `protobuf:"bytes,7,rep,name=range,proto3" json:"range,omitempty"`
+	Length               []string         `protobuf:"bytes,8,rep,name=length,proto3" json:"length,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
 }
 
 func (m *ReadWritePath) Reset()         { *m = ReadWritePath{} }
 func (m *ReadWritePath) String() string { return proto.CompactTextString(m) }
 func (*ReadWritePath) ProtoMessage()    {}
 func (*ReadWritePath) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{7}
+	return fileDescriptor_9081d84c442224d8, []int{3}
 }
 func (m *ReadWritePath) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ReadWritePath.Unmarshal(m, b)
@@ -543,11 +198,11 @@ func (m *ReadWritePath) GetPath() string {
 	return ""
 }
 
-func (m *ReadWritePath) GetValueType() ChangeValueType {
+func (m *ReadWritePath) GetValueType() change.ValueType {
 	if m != nil {
 		return m.ValueType
 	}
-	return ChangeValueType_EMPTY
+	return change.ValueType_EMPTY
 }
 
 func (m *ReadWritePath) GetUnits() string {
@@ -608,7 +263,7 @@ func (m *ModelInfo) Reset()         { *m = ModelInfo{} }
 func (m *ModelInfo) String() string { return proto.CompactTextString(m) }
 func (*ModelInfo) ProtoMessage()    {}
 func (*ModelInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{8}
+	return fileDescriptor_9081d84c442224d8, []int{4}
 }
 func (m *ModelInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ModelInfo.Unmarshal(m, b)
@@ -685,7 +340,7 @@ func (m *Chunk) Reset()         { *m = Chunk{} }
 func (m *Chunk) String() string { return proto.CompactTextString(m) }
 func (*Chunk) ProtoMessage()    {}
 func (*Chunk) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{9}
+	return fileDescriptor_9081d84c442224d8, []int{5}
 }
 func (m *Chunk) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Chunk.Unmarshal(m, b)
@@ -732,7 +387,7 @@ func (m *RegisterRequest) Reset()         { *m = RegisterRequest{} }
 func (m *RegisterRequest) String() string { return proto.CompactTextString(m) }
 func (*RegisterRequest) ProtoMessage()    {}
 func (*RegisterRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{10}
+	return fileDescriptor_9081d84c442224d8, []int{6}
 }
 func (m *RegisterRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RegisterRequest.Unmarshal(m, b)
@@ -771,7 +426,7 @@ func (m *SchemaEntry) Reset()         { *m = SchemaEntry{} }
 func (m *SchemaEntry) String() string { return proto.CompactTextString(m) }
 func (*SchemaEntry) ProtoMessage()    {}
 func (*SchemaEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{11}
+	return fileDescriptor_9081d84c442224d8, []int{7}
 }
 func (m *SchemaEntry) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SchemaEntry.Unmarshal(m, b)
@@ -818,7 +473,7 @@ func (m *RegisterResponse) Reset()         { *m = RegisterResponse{} }
 func (m *RegisterResponse) String() string { return proto.CompactTextString(m) }
 func (*RegisterResponse) ProtoMessage()    {}
 func (*RegisterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{12}
+	return fileDescriptor_9081d84c442224d8, []int{8}
 }
 func (m *RegisterResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RegisterResponse.Unmarshal(m, b)
@@ -866,7 +521,7 @@ func (m *ListModelsRequest) Reset()         { *m = ListModelsRequest{} }
 func (m *ListModelsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListModelsRequest) ProtoMessage()    {}
 func (*ListModelsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{13}
+	return fileDescriptor_9081d84c442224d8, []int{9}
 }
 func (m *ListModelsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListModelsRequest.Unmarshal(m, b)
@@ -922,7 +577,7 @@ func (m *RollbackRequest) Reset()         { *m = RollbackRequest{} }
 func (m *RollbackRequest) String() string { return proto.CompactTextString(m) }
 func (*RollbackRequest) ProtoMessage()    {}
 func (*RollbackRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{14}
+	return fileDescriptor_9081d84c442224d8, []int{10}
 }
 func (m *RollbackRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RollbackRequest.Unmarshal(m, b)
@@ -967,7 +622,7 @@ func (m *RollbackResponse) Reset()         { *m = RollbackResponse{} }
 func (m *RollbackResponse) String() string { return proto.CompactTextString(m) }
 func (*RollbackResponse) ProtoMessage()    {}
 func (*RollbackResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9081d84c442224d8, []int{15}
+	return fileDescriptor_9081d84c442224d8, []int{11}
 }
 func (m *RollbackResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RollbackResponse.Unmarshal(m, b)
@@ -995,102 +650,76 @@ func (m *RollbackResponse) GetMessage() string {
 }
 
 func init() {
-	proto.RegisterEnum("proto.ChangeValueType", ChangeValueType_name, ChangeValueType_value)
-	proto.RegisterEnum("proto.Type", Type_name, Type_value)
-	proto.RegisterType((*NetworkChangesRequest)(nil), "proto.NetworkChangesRequest")
-	proto.RegisterType((*ConfigChange)(nil), "proto.ConfigChange")
-	proto.RegisterType((*ChangeValue)(nil), "proto.ChangeValue")
-	proto.RegisterType((*Change)(nil), "proto.Change")
-	proto.RegisterType((*NetChange)(nil), "proto.NetChange")
-	proto.RegisterType((*ReadOnlySubPath)(nil), "proto.ReadOnlySubPath")
-	proto.RegisterType((*ReadOnlyPath)(nil), "proto.ReadOnlyPath")
-	proto.RegisterType((*ReadWritePath)(nil), "proto.ReadWritePath")
-	proto.RegisterType((*ModelInfo)(nil), "proto.ModelInfo")
-	proto.RegisterType((*Chunk)(nil), "proto.Chunk")
-	proto.RegisterType((*RegisterRequest)(nil), "proto.RegisterRequest")
-	proto.RegisterType((*SchemaEntry)(nil), "proto.SchemaEntry")
-	proto.RegisterType((*RegisterResponse)(nil), "proto.RegisterResponse")
-	proto.RegisterType((*ListModelsRequest)(nil), "proto.ListModelsRequest")
-	proto.RegisterType((*RollbackRequest)(nil), "proto.RollbackRequest")
-	proto.RegisterType((*RollbackResponse)(nil), "proto.RollbackResponse")
+	proto.RegisterType((*NetworkChangesRequest)(nil), "onos.config.admin.NetworkChangesRequest")
+	proto.RegisterType((*ReadOnlySubPath)(nil), "onos.config.admin.ReadOnlySubPath")
+	proto.RegisterType((*ReadOnlyPath)(nil), "onos.config.admin.ReadOnlyPath")
+	proto.RegisterType((*ReadWritePath)(nil), "onos.config.admin.ReadWritePath")
+	proto.RegisterType((*ModelInfo)(nil), "onos.config.admin.ModelInfo")
+	proto.RegisterType((*Chunk)(nil), "onos.config.admin.Chunk")
+	proto.RegisterType((*RegisterRequest)(nil), "onos.config.admin.RegisterRequest")
+	proto.RegisterType((*SchemaEntry)(nil), "onos.config.admin.SchemaEntry")
+	proto.RegisterType((*RegisterResponse)(nil), "onos.config.admin.RegisterResponse")
+	proto.RegisterType((*ListModelsRequest)(nil), "onos.config.admin.ListModelsRequest")
+	proto.RegisterType((*RollbackRequest)(nil), "onos.config.admin.RollbackRequest")
+	proto.RegisterType((*RollbackResponse)(nil), "onos.config.admin.RollbackResponse")
 }
 
 func init() { proto.RegisterFile("pkg/northbound/admin/admin.proto", fileDescriptor_9081d84c442224d8) }
 
 var fileDescriptor_9081d84c442224d8 = []byte{
-	// 1139 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0x4d, 0x6f, 0xdb, 0x46,
-	0x13, 0x0e, 0xf5, 0xad, 0x91, 0x64, 0x31, 0x1b, 0x27, 0xe1, 0xeb, 0x37, 0x45, 0x04, 0xf6, 0x62,
-	0x04, 0xad, 0xe4, 0xba, 0x0d, 0x8a, 0x16, 0x45, 0x1b, 0xd9, 0x92, 0x53, 0x17, 0xb2, 0x64, 0x50,
-	0xb2, 0x8b, 0x9c, 0x04, 0x4a, 0x5c, 0x53, 0xac, 0x49, 0x2e, 0xc3, 0x5d, 0x3a, 0xd0, 0xbf, 0xe8,
-	0xb1, 0x40, 0xcf, 0xfd, 0x5d, 0xfd, 0x05, 0x3d, 0xf5, 0x52, 0xf4, 0x54, 0xec, 0x2e, 0x97, 0xa2,
-	0xec, 0x18, 0xe8, 0xc7, 0x45, 0x9e, 0x99, 0x9d, 0x8f, 0x67, 0x66, 0x1e, 0x8d, 0x05, 0x9d, 0xe8,
-	0xda, 0xed, 0x85, 0x24, 0x66, 0xab, 0x05, 0x49, 0x42, 0xa7, 0x67, 0x3b, 0x81, 0x17, 0xca, 0xcf,
-	0x6e, 0x14, 0x13, 0x46, 0x50, 0x59, 0xfc, 0xd9, 0x7b, 0xee, 0x12, 0xe2, 0xfa, 0xb8, 0x27, 0xb4,
-	0x45, 0x72, 0xd5, 0x63, 0x5e, 0x80, 0x29, 0xb3, 0x83, 0x48, 0xfa, 0xed, 0xed, 0xba, 0xc4, 0x25,
-	0x42, 0xec, 0x71, 0x29, 0xb5, 0x1e, 0xb8, 0x1e, 0x5b, 0x25, 0x8b, 0xee, 0x92, 0x04, 0x3d, 0x12,
-	0xe1, 0x70, 0x49, 0xc2, 0x2b, 0xcf, 0xed, 0xb9, 0x61, 0xe0, 0xf5, 0x52, 0x67, 0x2e, 0xf2, 0x0f,
-	0x19, 0x61, 0x3e, 0x85, 0xc7, 0x63, 0xcc, 0xde, 0x91, 0xf8, 0xfa, 0x78, 0x65, 0x87, 0x2e, 0xa6,
-	0x16, 0x7e, 0x9b, 0x60, 0xca, 0xcc, 0x43, 0x68, 0x1e, 0x8b, 0x68, 0x69, 0x47, 0x3b, 0x50, 0xf0,
-	0x1c, 0x43, 0xeb, 0x68, 0xfb, 0x75, 0xab, 0xe0, 0x39, 0x08, 0x41, 0x69, 0x65, 0xd3, 0x95, 0x51,
-	0x10, 0x16, 0x21, 0x9b, 0xbf, 0x68, 0xd0, 0x90, 0xee, 0x97, 0xb6, 0x9f, 0x60, 0xee, 0x13, 0xd9,
-	0x6c, 0x95, 0x46, 0x09, 0x19, 0xed, 0x42, 0xf9, 0x86, 0x3f, 0x8a, 0xc0, 0xa6, 0x25, 0x15, 0xf4,
-	0x12, 0x40, 0x08, 0x73, 0xb6, 0x8e, 0xb0, 0x51, 0xec, 0x68, 0xfb, 0x3b, 0x87, 0x4f, 0x24, 0xc4,
-	0x6e, 0x2e, 0xe3, 0x6c, 0x1d, 0x61, 0xab, 0x7e, 0xa3, 0x44, 0xf4, 0x7f, 0xa8, 0xf3, 0x80, 0x39,
-	0x89, 0x18, 0x35, 0x4a, 0x9d, 0xe2, 0x7e, 0xd9, 0xaa, 0x71, 0xc3, 0x24, 0x62, 0x14, 0x19, 0x50,
-	0x8d, 0x71, 0x40, 0x6e, 0xb0, 0x63, 0x94, 0x3b, 0xda, 0x7e, 0xcd, 0x52, 0xaa, 0xf9, 0xb3, 0x06,
-	0x95, 0xb4, 0xad, 0xcf, 0xa0, 0xc4, 0x47, 0x2b, 0x20, 0x36, 0x0e, 0xf7, 0xba, 0x72, 0xee, 0x5d,
-	0x35, 0xf7, 0xee, 0x4c, 0xcd, 0xfd, 0xa8, 0xf4, 0xe3, 0xaf, 0xcf, 0x35, 0x4b, 0x78, 0xa7, 0xc3,
-	0x28, 0xe4, 0x87, 0xe1, 0x60, 0xba, 0x14, 0xc0, 0xeb, 0x96, 0x90, 0xd1, 0xe7, 0xd0, 0x5a, 0x8a,
-	0x1a, 0x73, 0x81, 0x57, 0xe2, 0x6b, 0x1c, 0xa2, 0xbb, 0x5d, 0x59, 0xcd, 0xe5, 0x46, 0xa1, 0xe6,
-	0x4f, 0x1a, 0xd4, 0xc7, 0x98, 0xfd, 0x27, 0x80, 0x08, 0x4a, 0xa1, 0x1d, 0x60, 0xb5, 0x1d, 0x2e,
-	0x73, 0x5b, 0x42, 0x71, 0xac, 0x40, 0x72, 0x19, 0x7d, 0x0c, 0x55, 0x59, 0x5b, 0xc1, 0x7b, 0xa4,
-	0xe0, 0xe5, 0x76, 0x6f, 0x29, 0x1f, 0x73, 0x09, 0x6d, 0x0b, 0xdb, 0xce, 0x24, 0xf4, 0xd7, 0xd3,
-	0x64, 0x71, 0xce, 0xf7, 0xf9, 0x3f, 0xa8, 0xd1, 0x64, 0x31, 0xcf, 0xed, 0xb9, 0x4a, 0xd3, 0xa7,
-	0xed, 0xa5, 0x16, 0xfe, 0xe6, 0x52, 0xcd, 0x0b, 0x68, 0xaa, 0x22, 0x22, 0xcd, 0xfb, 0x58, 0xf4,
-	0x49, 0xae, 0x6a, 0x41, 0x00, 0x57, 0x89, 0x6f, 0xe1, 0xcb, 0xd0, 0x98, 0x7f, 0x68, 0xd0, 0xe2,
-	0x8f, 0xdf, 0xc7, 0x1e, 0xc3, 0xf7, 0x26, 0xfe, 0x77, 0x98, 0x39, 0xab, 0x93, 0xd0, 0x63, 0x34,
-	0x1d, 0xae, 0x54, 0x50, 0x07, 0x1a, 0x9c, 0x0a, 0xb1, 0x17, 0x31, 0x8f, 0x84, 0x46, 0x49, 0xbc,
-	0xe5, 0x4d, 0xe8, 0x19, 0xd4, 0x03, 0x3b, 0x74, 0x6c, 0x46, 0xe2, 0x75, 0xca, 0xd2, 0x8d, 0x81,
-	0x33, 0xd8, 0xc1, 0x57, 0x76, 0xe2, 0x33, 0xa3, 0x22, 0x47, 0x9b, 0xaa, 0xbc, 0x5e, 0xcc, 0xc1,
-	0x18, 0xd5, 0x4e, 0x91, 0xd7, 0x13, 0x0a, 0x7a, 0x02, 0x15, 0x1f, 0x87, 0x2e, 0x5b, 0x19, 0x35,
-	0x61, 0x4e, 0x35, 0xf3, 0x4f, 0x0d, 0xea, 0x67, 0xc4, 0xc1, 0xfe, 0x69, 0x78, 0x45, 0x32, 0x6e,
-	0x68, 0x39, 0x6e, 0x18, 0x50, 0xbd, 0xc1, 0x31, 0xe5, 0x28, 0x25, 0x65, 0x94, 0x8a, 0xba, 0x00,
-	0x01, 0x0f, 0x9d, 0x3b, 0x36, 0xb3, 0x8d, 0xa2, 0x98, 0x75, 0xbb, 0x2b, 0x2e, 0x88, 0x48, 0x39,
-	0xb0, 0x99, 0x6d, 0xd5, 0x03, 0x25, 0x72, 0x0c, 0x01, 0x71, 0x12, 0x1f, 0xa7, 0xed, 0xa6, 0x1a,
-	0xfa, 0x02, 0x76, 0x62, 0x6c, 0x3b, 0x73, 0x12, 0xfa, 0x6b, 0xb9, 0xb7, 0xea, 0x16, 0xe1, 0xf2,
-	0x2b, 0xb7, 0x9a, 0x71, 0x9e, 0x00, 0x5f, 0x41, 0x5b, 0x84, 0xbe, 0xe3, 0x9b, 0x93, 0xb1, 0x35,
-	0x11, 0xbb, 0x9b, 0x8b, 0xcd, 0xd6, 0x6a, 0xb5, 0xe2, 0xbc, 0x6a, 0x7e, 0x09, 0xe5, 0xe3, 0x55,
-	0x12, 0x5e, 0xa3, 0xa7, 0x50, 0xa5, 0x64, 0x7e, 0xe5, 0xf9, 0xaa, 0xf5, 0x0a, 0x25, 0x27, 0x9e,
-	0x2f, 0x9a, 0x3f, 0x26, 0x21, 0xc3, 0x21, 0x4b, 0x8f, 0x92, 0x52, 0xcd, 0x17, 0x9c, 0xef, 0xae,
-	0x47, 0x19, 0x8e, 0xd3, 0xbb, 0x78, 0x6f, 0x16, 0x73, 0x02, 0x8d, 0xe9, 0x72, 0x85, 0x03, 0x7b,
-	0x18, 0xb2, 0x78, 0x8d, 0x9e, 0x43, 0x83, 0x0a, 0x35, 0xff, 0xd5, 0x00, 0x69, 0x12, 0x5d, 0x6d,
-	0x1c, 0x7e, 0xa0, 0xd9, 0xd8, 0x53, 0x87, 0xef, 0x28, 0x09, 0xcd, 0x57, 0xa0, 0x6f, 0x8a, 0xd3,
-	0x88, 0x84, 0x14, 0xff, 0xb3, 0xdd, 0x99, 0x6f, 0xe1, 0xe1, 0xc8, 0xa3, 0x4c, 0xec, 0x49, 0x1d,
-	0xf6, 0xd4, 0x7d, 0x41, 0xa8, 0xcc, 0x52, 0xb3, 0x94, 0x8a, 0x3e, 0x50, 0xab, 0xce, 0x9d, 0x0e,
-	0xb9, 0xd9, 0x31, 0xaf, 0xf3, 0x21, 0xb4, 0xe4, 0xb3, 0xaa, 0x26, 0xb9, 0xde, 0x14, 0xc6, 0xcb,
-	0xb4, 0xe4, 0x37, 0xd0, 0xb6, 0x88, 0xef, 0x2f, 0xec, 0xe5, 0xb5, 0x2a, 0x78, 0x0f, 0xe6, 0x25,
-	0x09, 0x02, 0x35, 0xf2, 0xba, 0xa5, 0x54, 0xf3, 0x23, 0xd0, 0x37, 0x09, 0xd2, 0xae, 0x0d, 0xa8,
-	0x06, 0x98, 0x52, 0xdb, 0x55, 0x49, 0x94, 0xfa, 0xe2, 0x77, 0x0d, 0xda, 0xb7, 0xbe, 0x96, 0xa8,
-	0x0e, 0xe5, 0xe1, 0xd9, 0xf9, 0xec, 0x8d, 0xfe, 0x00, 0x01, 0x54, 0xa6, 0x33, 0xeb, 0x74, 0xfc,
-	0x5a, 0xd7, 0x50, 0x15, 0x8a, 0xa7, 0xe3, 0x99, 0x5e, 0x40, 0x35, 0x28, 0x5d, 0x70, 0xa9, 0xc8,
-	0xa5, 0xa3, 0xc9, 0x64, 0xa4, 0x97, 0x50, 0x03, 0xaa, 0x83, 0xe1, 0xf1, 0xe9, 0x59, 0x7f, 0xa4,
-	0x97, 0x79, 0x82, 0x93, 0xd1, 0xa4, 0x3f, 0xd3, 0x2b, 0x5c, 0x3c, 0x7a, 0x33, 0x1b, 0x4e, 0xf5,
-	0x2a, 0x7a, 0x04, 0xed, 0xd1, 0xb0, 0x7f, 0x32, 0x3a, 0x9d, 0xce, 0xe6, 0x69, 0xd2, 0x1a, 0xd2,
-	0xa1, 0x99, 0x19, 0x79, 0xce, 0x3a, 0x7a, 0x08, 0xad, 0xcc, 0x22, 0xca, 0xc0, 0x96, 0x49, 0xd4,
-	0x6b, 0xa0, 0x5d, 0xd0, 0x33, 0x93, 0x2a, 0xdc, 0x44, 0x08, 0x76, 0x32, 0xab, 0x44, 0xd0, 0xda,
-	0xb2, 0x49, 0x28, 0x3b, 0x2f, 0x5e, 0x42, 0x49, 0x74, 0x5a, 0x83, 0xd2, 0x78, 0x32, 0x1e, 0xea,
-	0x0f, 0x38, 0xce, 0xfe, 0x60, 0x30, 0x1c, 0xe8, 0x1a, 0x6f, 0xe5, 0xe2, 0x7c, 0xd0, 0x9f, 0x0d,
-	0x07, 0x7a, 0x81, 0x2b, 0xd6, 0xf0, 0x6c, 0x72, 0x39, 0x1c, 0xe8, 0xc5, 0xc3, 0xdf, 0x0a, 0x80,
-	0xe4, 0x5d, 0xef, 0xf3, 0x5f, 0x1c, 0x53, 0x1c, 0xdf, 0x78, 0x4b, 0x8c, 0x5e, 0xf1, 0xbb, 0x28,
-	0x79, 0x26, 0x98, 0x82, 0x36, 0xa7, 0x74, 0x8b, 0xfa, 0x7b, 0x4f, 0xef, 0xd8, 0xd3, 0xfd, 0x7c,
-	0x0d, 0x8f, 0x2e, 0x22, 0x9f, 0xd8, 0xce, 0x76, 0x9e, 0x66, 0x76, 0x37, 0x93, 0xf0, 0xfa, 0xde,
-	0xe8, 0x7d, 0x0d, 0x0d, 0x60, 0x97, 0xf3, 0x54, 0xbd, 0x60, 0x47, 0x32, 0x16, 0x19, 0x69, 0xc8,
-	0x1d, 0x12, 0xef, 0xe9, 0xe9, 0x4b, 0x76, 0xd5, 0x0e, 0x34, 0x34, 0x84, 0x87, 0xaf, 0x31, 0xdb,
-	0xfe, 0x35, 0x83, 0x9e, 0xa5, 0x8e, 0xef, 0xfd, 0x91, 0x93, 0xa5, 0xc9, 0xfe, 0xdd, 0x1e, 0x68,
-	0xe8, 0x5b, 0x78, 0xac, 0x08, 0xb8, 0x15, 0xb4, 0x19, 0xcb, 0x36, 0xbf, 0x37, 0x8d, 0xdd, 0xa2,
-	0xed, 0xa2, 0x22, 0xec, 0x9f, 0xfe, 0x15, 0x00, 0x00, 0xff, 0xff, 0x82, 0x0b, 0x5b, 0x88, 0xf6,
-	0x09, 0x00, 0x00,
+	// 819 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x6d, 0x8f, 0xdb, 0x44,
+	0x10, 0x96, 0x2f, 0xbd, 0x4b, 0x32, 0xc9, 0x35, 0xbd, 0xe5, 0x4a, 0x4d, 0xd4, 0xaa, 0x96, 0xcb,
+	0x87, 0x08, 0x81, 0x73, 0x3a, 0xbe, 0x21, 0x10, 0x85, 0x50, 0xde, 0x04, 0x2d, 0xf2, 0xc1, 0xc1,
+	0x07, 0xa4, 0xb0, 0xb1, 0x37, 0xb6, 0x2f, 0xf6, 0xae, 0xeb, 0x5d, 0xa7, 0xca, 0xdf, 0xe0, 0x6f,
+	0xf2, 0x23, 0x40, 0xfb, 0x96, 0x38, 0xad, 0x53, 0x71, 0xea, 0x97, 0x64, 0x67, 0x77, 0xe6, 0x79,
+	0x66, 0xe6, 0x99, 0xf5, 0x82, 0x57, 0xae, 0x92, 0x29, 0x65, 0x95, 0x48, 0x17, 0xac, 0xa6, 0xf1,
+	0x14, 0xc7, 0x45, 0x46, 0xf5, 0x6f, 0x50, 0x56, 0x4c, 0x30, 0x74, 0xc6, 0x28, 0xe3, 0x41, 0xc4,
+	0xe8, 0x32, 0x4b, 0x02, 0x75, 0x30, 0x3e, 0x4f, 0x58, 0xc2, 0xd4, 0xe9, 0x54, 0xae, 0xb4, 0xe3,
+	0xf8, 0x22, 0xc9, 0x44, 0x5a, 0x2f, 0x82, 0x88, 0x15, 0x53, 0x56, 0x12, 0xaa, 0x43, 0xa6, 0x09,
+	0x2d, 0xb2, 0xa9, 0x71, 0x96, 0x4b, 0xf9, 0x63, 0x22, 0x9e, 0x36, 0x23, 0x28, 0xe3, 0x65, 0xc5,
+	0x6e, 0x48, 0x24, 0xd4, 0xfa, 0x13, 0x13, 0x2e, 0xf3, 0x13, 0x9b, 0x92, 0xf0, 0x69, 0x94, 0x62,
+	0x9a, 0x10, 0xf3, 0x67, 0x10, 0xbe, 0xbe, 0x15, 0x02, 0x25, 0xe2, 0x15, 0xab, 0x56, 0xf6, 0x5f,
+	0x63, 0xf8, 0x0f, 0xe0, 0xfe, 0x73, 0xbd, 0x31, 0x53, 0xd0, 0x3c, 0x24, 0x2f, 0x6b, 0xc2, 0x85,
+	0x7f, 0x03, 0xa3, 0x90, 0xe0, 0xf8, 0x05, 0xcd, 0x37, 0x57, 0xf5, 0xe2, 0x17, 0x2c, 0x52, 0xf4,
+	0x01, 0xf4, 0x78, 0xbd, 0x98, 0x97, 0x58, 0xa4, 0xae, 0xe3, 0x39, 0x93, 0x7e, 0xd8, 0xe5, 0xe6,
+	0xe8, 0x73, 0x80, 0x35, 0xce, 0x6b, 0x32, 0x97, 0x5c, 0xee, 0x91, 0xe7, 0x4c, 0xee, 0x5e, 0x3e,
+	0x0a, 0x9a, 0xcd, 0x33, 0x99, 0x5f, 0x4b, 0xaf, 0x5f, 0x37, 0x25, 0x09, 0xfb, 0x6b, 0xbb, 0xf4,
+	0x31, 0x0c, 0x2d, 0x97, 0x42, 0x43, 0x70, 0xa7, 0x41, 0xa2, 0xd6, 0xe8, 0x8b, 0x06, 0xf9, 0x91,
+	0xd7, 0x99, 0x0c, 0x2e, 0xfd, 0xe0, 0x0d, 0x71, 0x82, 0xd7, 0x52, 0xde, 0x26, 0xe8, 0xff, 0xeb,
+	0xc0, 0xa9, 0x3c, 0xfc, 0xbd, 0xca, 0x04, 0x39, 0x48, 0xf2, 0x4e, 0x65, 0xa0, 0x73, 0x38, 0xae,
+	0x69, 0x26, 0xb8, 0xdb, 0x51, 0x90, 0xda, 0x40, 0x1e, 0x0c, 0x62, 0xc2, 0xa3, 0x2a, 0x2b, 0x45,
+	0xc6, 0xa8, 0x7b, 0x47, 0x9d, 0x35, 0xb7, 0xd0, 0x43, 0xe8, 0x17, 0x98, 0xc6, 0x58, 0xb0, 0x6a,
+	0xe3, 0x1e, 0x7b, 0xce, 0xa4, 0x17, 0xee, 0x36, 0x90, 0x0b, 0xdd, 0x98, 0x2c, 0x71, 0x9d, 0x0b,
+	0xf7, 0x44, 0x37, 0xdd, 0x98, 0x92, 0xaf, 0x92, 0xd9, 0xb8, 0x5d, 0xaf, 0x23, 0xf9, 0x94, 0x81,
+	0xde, 0x87, 0x93, 0x9c, 0xd0, 0x44, 0xa4, 0x6e, 0x4f, 0x6d, 0x1b, 0xcb, 0xff, 0xfb, 0x08, 0xfa,
+	0x3f, 0xb3, 0x98, 0xe4, 0x3f, 0xd0, 0x25, 0x93, 0xd5, 0x53, 0x5c, 0x10, 0x5b, 0xbd, 0x5c, 0x4b,
+	0xa6, 0x35, 0xa9, 0xb8, 0xcc, 0xf2, 0x48, 0x33, 0x19, 0x13, 0x05, 0x00, 0x85, 0x0c, 0x9d, 0xc7,
+	0x58, 0x60, 0xb7, 0xa3, 0xda, 0x3f, 0x0a, 0xd4, 0x30, 0x2b, 0xc8, 0x6f, 0xb0, 0xc0, 0x61, 0xbf,
+	0xb0, 0x4b, 0x99, 0x43, 0xc1, 0xe2, 0x3a, 0x27, 0xa6, 0x5c, 0x63, 0xa1, 0x67, 0x70, 0xb7, 0x22,
+	0x38, 0x9e, 0x33, 0x9a, 0x6f, 0xb4, 0x94, 0x5d, 0x85, 0xf5, 0xf8, 0x2d, 0x52, 0x2a, 0x1d, 0x87,
+	0x55, 0x73, 0x3e, 0xbe, 0x87, 0x91, 0x82, 0x79, 0x25, 0xc5, 0xd4, 0x38, 0x3d, 0x85, 0xe3, 0x1d,
+	0xc0, 0xd9, 0xaa, 0x1e, 0x9e, 0x56, 0x4d, 0xd3, 0xff, 0x0c, 0x8e, 0x67, 0x69, 0x4d, 0x57, 0xe8,
+	0x01, 0x74, 0x39, 0x9b, 0x2f, 0xb3, 0xdc, 0xb6, 0xe4, 0x84, 0xb3, 0x6f, 0xb3, 0x5c, 0x35, 0x65,
+	0xc6, 0xa8, 0x20, 0x54, 0xa8, 0xa6, 0x0c, 0x43, 0x6b, 0xfa, 0x1f, 0xc9, 0x1b, 0x92, 0x64, 0x5c,
+	0x90, 0xca, 0x5c, 0x9a, 0x83, 0x28, 0xfe, 0x0b, 0x18, 0x5c, 0x45, 0x29, 0x29, 0xf0, 0x33, 0x2a,
+	0xaa, 0x0d, 0x7a, 0x0c, 0x03, 0xae, 0xcc, 0xe6, 0x65, 0x02, 0xbd, 0xa5, 0x2a, 0xdc, 0x39, 0xdc,
+	0xf0, 0xad, 0x1c, 0xc6, 0xe1, 0x47, 0xce, 0xa8, 0xff, 0x14, 0xee, 0xed, 0xc8, 0x79, 0xc9, 0x28,
+	0x27, 0xb7, 0xd3, 0xd4, 0x7f, 0x09, 0x67, 0x3f, 0x65, 0x5c, 0x28, 0xfd, 0xec, 0xad, 0x37, 0xee,
+	0x0b, 0xc6, 0x35, 0x4a, 0x2f, 0xb4, 0x26, 0x7a, 0x64, 0x47, 0x40, 0x51, 0x68, 0x2c, 0xad, 0xf8,
+	0x73, 0xc9, 0xf3, 0x04, 0x4e, 0xf5, 0xb1, 0x65, 0xd3, 0x77, 0x60, 0xa8, 0x36, 0xaf, 0x0d, 0xe5,
+	0x97, 0x30, 0x0a, 0x59, 0x9e, 0x2f, 0x70, 0xb4, 0xb2, 0x84, 0x07, 0x72, 0x8e, 0x58, 0x51, 0xd8,
+	0x96, 0xf7, 0x43, 0x6b, 0xfa, 0x1f, 0xc3, 0xbd, 0x1d, 0x80, 0xa9, 0xda, 0x85, 0x6e, 0x41, 0x38,
+	0xc7, 0x89, 0x05, 0xb1, 0xe6, 0xe5, 0x3f, 0x1d, 0x40, 0x33, 0x35, 0x0a, 0x5f, 0xc9, 0x49, 0xb8,
+	0x22, 0xd5, 0x3a, 0x8b, 0x08, 0xfa, 0x43, 0x7e, 0x09, 0x74, 0xeb, 0x54, 0xf1, 0xa8, 0xfd, 0x43,
+	0xb2, 0xa7, 0xec, 0xf8, 0xc9, 0x5b, 0x7d, 0x4c, 0x2a, 0xd7, 0xf0, 0xde, 0x6f, 0x65, 0xce, 0x70,
+	0xbc, 0x8f, 0xef, 0xb6, 0xc4, 0xaa, 0xa9, 0xfb, 0x5f, 0xa8, 0x13, 0x07, 0xfd, 0x09, 0xe7, 0x52,
+	0x2a, 0x7b, 0x42, 0x62, 0x2d, 0x1a, 0xfa, 0xb0, 0x25, 0xfc, 0x0d, 0x4d, 0xc7, 0x0f, 0x5b, 0xbc,
+	0xb6, 0x1f, 0x82, 0x0b, 0x07, 0x45, 0x70, 0xf6, 0x1d, 0x11, 0xfb, 0xaf, 0x00, 0x9a, 0xb4, 0x04,
+	0xb5, 0x3e, 0x14, 0xe3, 0xfd, 0xee, 0xd9, 0xd7, 0xc5, 0xfa, 0xaa, 0xdd, 0x0b, 0x07, 0xfd, 0x05,
+	0xf7, 0xad, 0x72, 0x7b, 0x30, 0xed, 0xcd, 0xdf, 0x1f, 0x92, 0xf6, 0x36, 0xbd, 0x36, 0x07, 0x8b,
+	0x13, 0xf5, 0xa0, 0x7d, 0xfa, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe6, 0x1e, 0x4b, 0x2b, 0xd5,
+	0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1128,7 +757,7 @@ func NewConfigAdminServiceClient(cc *grpc.ClientConn) ConfigAdminServiceClient {
 
 func (c *configAdminServiceClient) RegisterModel(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
 	out := new(RegisterResponse)
-	err := c.cc.Invoke(ctx, "/proto.ConfigAdminService/RegisterModel", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/onos.config.admin.ConfigAdminService/RegisterModel", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1136,7 +765,7 @@ func (c *configAdminServiceClient) RegisterModel(ctx context.Context, in *Regist
 }
 
 func (c *configAdminServiceClient) UploadRegisterModel(ctx context.Context, opts ...grpc.CallOption) (ConfigAdminService_UploadRegisterModelClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ConfigAdminService_serviceDesc.Streams[0], "/proto.ConfigAdminService/UploadRegisterModel", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ConfigAdminService_serviceDesc.Streams[0], "/onos.config.admin.ConfigAdminService/UploadRegisterModel", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1170,7 +799,7 @@ func (x *configAdminServiceUploadRegisterModelClient) CloseAndRecv() (*RegisterR
 }
 
 func (c *configAdminServiceClient) ListRegisteredModels(ctx context.Context, in *ListModelsRequest, opts ...grpc.CallOption) (ConfigAdminService_ListRegisteredModelsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ConfigAdminService_serviceDesc.Streams[1], "/proto.ConfigAdminService/ListRegisteredModels", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ConfigAdminService_serviceDesc.Streams[1], "/onos.config.admin.ConfigAdminService/ListRegisteredModels", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1202,7 +831,7 @@ func (x *configAdminServiceListRegisteredModelsClient) Recv() (*ModelInfo, error
 }
 
 func (c *configAdminServiceClient) GetNetworkChanges(ctx context.Context, in *NetworkChangesRequest, opts ...grpc.CallOption) (ConfigAdminService_GetNetworkChangesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_ConfigAdminService_serviceDesc.Streams[2], "/proto.ConfigAdminService/GetNetworkChanges", opts...)
+	stream, err := c.cc.NewStream(ctx, &_ConfigAdminService_serviceDesc.Streams[2], "/onos.config.admin.ConfigAdminService/GetNetworkChanges", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1217,7 +846,7 @@ func (c *configAdminServiceClient) GetNetworkChanges(ctx context.Context, in *Ne
 }
 
 type ConfigAdminService_GetNetworkChangesClient interface {
-	Recv() (*NetChange, error)
+	Recv() (*network.NetworkConfig, error)
 	grpc.ClientStream
 }
 
@@ -1225,8 +854,8 @@ type configAdminServiceGetNetworkChangesClient struct {
 	grpc.ClientStream
 }
 
-func (x *configAdminServiceGetNetworkChangesClient) Recv() (*NetChange, error) {
-	m := new(NetChange)
+func (x *configAdminServiceGetNetworkChangesClient) Recv() (*network.NetworkConfig, error) {
+	m := new(network.NetworkConfig)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -1235,7 +864,7 @@ func (x *configAdminServiceGetNetworkChangesClient) Recv() (*NetChange, error) {
 
 func (c *configAdminServiceClient) RollbackNetworkChange(ctx context.Context, in *RollbackRequest, opts ...grpc.CallOption) (*RollbackResponse, error) {
 	out := new(RollbackResponse)
-	err := c.cc.Invoke(ctx, "/proto.ConfigAdminService/RollbackNetworkChange", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/onos.config.admin.ConfigAdminService/RollbackNetworkChange", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1291,7 +920,7 @@ func _ConfigAdminService_RegisterModel_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.ConfigAdminService/RegisterModel",
+		FullMethod: "/onos.config.admin.ConfigAdminService/RegisterModel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigAdminServiceServer).RegisterModel(ctx, req.(*RegisterRequest))
@@ -1355,7 +984,7 @@ func _ConfigAdminService_GetNetworkChanges_Handler(srv interface{}, stream grpc.
 }
 
 type ConfigAdminService_GetNetworkChangesServer interface {
-	Send(*NetChange) error
+	Send(*network.NetworkConfig) error
 	grpc.ServerStream
 }
 
@@ -1363,7 +992,7 @@ type configAdminServiceGetNetworkChangesServer struct {
 	grpc.ServerStream
 }
 
-func (x *configAdminServiceGetNetworkChangesServer) Send(m *NetChange) error {
+func (x *configAdminServiceGetNetworkChangesServer) Send(m *network.NetworkConfig) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -1377,7 +1006,7 @@ func _ConfigAdminService_RollbackNetworkChange_Handler(srv interface{}, ctx cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.ConfigAdminService/RollbackNetworkChange",
+		FullMethod: "/onos.config.admin.ConfigAdminService/RollbackNetworkChange",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigAdminServiceServer).RollbackNetworkChange(ctx, req.(*RollbackRequest))
@@ -1386,7 +1015,7 @@ func _ConfigAdminService_RollbackNetworkChange_Handler(srv interface{}, ctx cont
 }
 
 var _ConfigAdminService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.ConfigAdminService",
+	ServiceName: "onos.config.admin.ConfigAdminService",
 	HandlerType: (*ConfigAdminServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -3,6 +3,7 @@ package network
 import (
 	"github.com/onosproject/onos-config/pkg/controller"
 	networkstore "github.com/onosproject/onos-config/pkg/store/network"
+	networktype "github.com/onosproject/onos-config/pkg/types/network"
 	"sync"
 )
 
@@ -11,7 +12,7 @@ const queueSize = 100
 // Watcher is a network watcher
 type Watcher struct {
 	Store networkstore.Store
-	ch    chan *networkstore.NetworkConfig
+	ch    chan *networktype.NetworkConfig
 	mu    sync.Mutex
 }
 
@@ -23,7 +24,7 @@ func (w *Watcher) Start(ch chan<- interface{}) error {
 		return nil
 	}
 
-	requestCh := make(chan *networkstore.NetworkConfig, queueSize)
+	requestCh := make(chan *networktype.NetworkConfig, queueSize)
 	w.ch = requestCh
 	w.mu.Unlock()
 
@@ -48,7 +49,7 @@ var _ controller.Watcher = &Watcher{}
 // OwnerWatcher is a network owner watcher
 type OwnerWatcher struct {
 	Store networkstore.Store
-	ch    chan *networkstore.NetworkConfig
+	ch    chan *networktype.NetworkConfig
 	mu    sync.Mutex
 }
 
@@ -60,7 +61,7 @@ func (w *OwnerWatcher) Start(ch chan<- interface{}) error {
 		return nil
 	}
 
-	requestCh := make(chan *networkstore.NetworkConfig, queueSize)
+	requestCh := make(chan *networktype.NetworkConfig, queueSize)
 	w.ch = requestCh
 	w.mu.Unlock()
 

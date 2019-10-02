@@ -3,6 +3,7 @@ package request
 import (
 	"github.com/onosproject/onos-config/pkg/controller"
 	requeststore "github.com/onosproject/onos-config/pkg/store/request"
+	requesttype "github.com/onosproject/onos-config/pkg/types/request"
 	"sync"
 )
 
@@ -11,7 +12,7 @@ const queueSize = 100
 // Watcher is a request watcher
 type Watcher struct {
 	Store requeststore.Store
-	ch    chan *requeststore.ConfigRequest
+	ch    chan *requesttype.ConfigRequest
 	mu    sync.Mutex
 }
 
@@ -23,7 +24,7 @@ func (w *Watcher) Start(ch chan<- interface{}) error {
 		return nil
 	}
 
-	requestCh := make(chan *requeststore.ConfigRequest, queueSize)
+	requestCh := make(chan *requesttype.ConfigRequest, queueSize)
 	w.ch = requestCh
 	w.mu.Unlock()
 

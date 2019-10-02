@@ -16,20 +16,39 @@ limitations under the License.
 
 syntax = "proto3";
 
-package proto;
+package onos.config.diags;
 
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
-import "github.com/onosproject/onos-config/pkg/northbound/admin/admin.proto";
+import "github.com/onosproject/onos-config/pkg/types/change/change.proto";
+
+// Streaming event type
+enum Type {
+    // NONE indicates this response does not represent a state change
+    NONE = 0;
+
+    // ADDED is an event which occurs when an item is added
+    ADDED = 1;
+
+    // UPDATED is an event which occurs when an item is updated
+    UPDATED = 2;
+
+    // REMOVED is an event which occurs when an item is removed
+    REMOVED = 3;
+}
 
 // ChangesRequest is a message for specifying GetChanges query parameters.
 message ChangesRequest {
-    repeated string change_ids = 1 [(gogoproto.customname) = "ChangeIDs"];
+    repeated string change_ids = 1 [
+        (gogoproto.customname) = "ChangeIDs",
+        (gogoproto.casttype) = "github.com/onosproject/onos-topo/pkg/types/change.ID"];
 }
 
 // ConfigRequest is a message for specifying GetConfigurations query parameters.
 message ConfigRequest {
-    repeated string device_ids = 1 [(gogoproto.customname) = "DeviceIDs"];
+    repeated string device_ids = 1 [
+    (gogoproto.customname) = "DeviceIDs",
+    (gogoproto.casttype) = "github.com/onosproject/onos-topo/pkg/northbound/device.ID"];
 }
 
 // OpStateRequest is a message for specifying GetOpState query parameters.
@@ -47,7 +66,7 @@ message OpStateResponse {
     Type type = 1;
 
     // device is the device on which the event occurred
-    ChangeValue pathvalue = 2;
+    onos.config.change.Value pathvalue = 2;
 }
 
 // Configuration is a descriptor of a submitted configuration change targeted at a single device.
@@ -58,13 +77,15 @@ message Configuration {
     string device_type = 4;
     google.protobuf.Timestamp created = 5 [(gogoproto.stdtime) = true];
     google.protobuf.Timestamp updated = 6 [(gogoproto.stdtime) = true];
-    repeated string change_ids = 7 [(gogoproto.customname) = "ChangeIDs"];
+    repeated string change_ids = 7 [
+    (gogoproto.customname) = "ChangeIDs",
+    (gogoproto.casttype) = "github.com/onosproject/onos-topo/pkg/types/change.ID"];
 }
 
 // ConfigDiags provides means for obtaining diagnostic information about internal system state.
 service ConfigDiags {
     // GetChanges returns a stream of submitted changes objects.
-    rpc GetChanges (ChangesRequest) returns (stream Change);
+    rpc GetChanges (ChangesRequest) returns (stream onos.config.change.Change);
 
     // GetConfigurations returns a stream of submitted configurations aimed at individual devices.
     rpc GetConfigurations (ConfigRequest) returns (stream Configuration);

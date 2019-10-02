@@ -3,6 +3,7 @@ package change
 import (
 	"github.com/onosproject/onos-config/pkg/controller"
 	changestore "github.com/onosproject/onos-config/pkg/store/change"
+	"github.com/onosproject/onos-config/pkg/types/change"
 	"sync"
 )
 
@@ -11,7 +12,7 @@ const queueSize = 100
 // Watcher is a change watcher
 type Watcher struct {
 	Store changestore.Store
-	ch    chan *changestore.Change
+	ch    chan *change.Change
 	mu    sync.Mutex
 }
 
@@ -23,7 +24,7 @@ func (w *Watcher) Start(ch chan<- interface{}) error {
 		return nil
 	}
 
-	requestCh := make(chan *changestore.Change, queueSize)
+	requestCh := make(chan *change.Change, queueSize)
 	w.ch = requestCh
 	w.mu.Unlock()
 
@@ -48,7 +49,7 @@ var _ controller.Watcher = &Watcher{}
 // OwnerWatcher is a change network watcher
 type OwnerWatcher struct {
 	Store changestore.Store
-	ch    chan *changestore.Change
+	ch    chan *change.Change
 	mu    sync.Mutex
 }
 
@@ -60,7 +61,7 @@ func (w *OwnerWatcher) Start(ch chan<- interface{}) error {
 		return nil
 	}
 
-	requestCh := make(chan *changestore.Change, queueSize)
+	requestCh := make(chan *change.Change, queueSize)
 	w.ch = requestCh
 	w.mu.Unlock()
 

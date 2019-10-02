@@ -2,7 +2,6 @@ package request
 
 import (
 	"context"
-	"fmt"
 	"github.com/atomix/atomix-go-client/pkg/client/list"
 	"github.com/atomix/atomix-go-client/pkg/client/primitive"
 	"github.com/atomix/atomix-go-client/pkg/client/session"
@@ -10,9 +9,8 @@ import (
 	"github.com/atomix/atomix-go-node/pkg/atomix"
 	"github.com/atomix/atomix-go-node/pkg/atomix/registry"
 	"github.com/gogo/protobuf/proto"
-	"github.com/onosproject/onos-config/pkg/store/network"
 	"github.com/onosproject/onos-config/pkg/store/utils"
-	"github.com/onosproject/onos-topo/pkg/northbound/device"
+	"github.com/onosproject/onos-config/pkg/types/request"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"io"
@@ -21,23 +19,6 @@ import (
 )
 
 const requestTimeout = 15 * time.Second
-
-// ID is a request identifier
-type ID uint64
-
-// GetNetworkID gets the network ID for the request
-func (r *ConfigRequest) GetNetworkID() network.ID {
-	return network.ID(fmt.Sprintf("%d", r.ID))
-}
-
-// GetDevices gets a list of devices changed by the configuration
-func (r *ConfigRequest) GetDevices() []device.ID {
-	devices := make([]device.ID, len(r.Changes))
-	for i := 0; i < len(r.Changes); i++ {
-		devices[i] = r.Changes[i].DeviceID
-	}
-	return devices
-}
 
 // NewAtomixStore returns a new persistent Store
 func NewAtomixStore() (Store, error) {
@@ -103,16 +84,16 @@ type Store interface {
 	io.Closer
 
 	// Get gets a configuration request
-	Get(id ID) (*ConfigRequest, error)
+	Get(id request.ID) (*request.ConfigRequest, error)
 
 	// ConfigRequest appends a configuration request
-	Append(config *ConfigRequest) error
+	Append(config *request.ConfigRequest) error
 
 	// Replay replays configuration requests from the given ID
-	Replay(ID, chan<- *ConfigRequest) error
+	Replay(request.ID, chan<- *request.ConfigRequest) error
 
 	// Watch watches the store for changes
-	Watch(chan<- *ConfigRequest) error
+	Watch(chan<- *request.ConfigRequest) error
 }
 
 // atomixStore is the default implementation of the NetworkConfig store
@@ -121,7 +102,7 @@ type atomixStore struct {
 	closer   io.Closer
 }
 
-func (s *atomixStore) Get(id ID) (*ConfigRequest, error) {
+func (s *atomixStore) Get(id request.ID) (*request.ConfigRequest, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 	bytes, err := s.requests.Get(ctx, int(id))
@@ -131,7 +112,7 @@ func (s *atomixStore) Get(id ID) (*ConfigRequest, error) {
 	return decodeRequest(id, bytes)
 }
 
-func (s *atomixStore) Append(config *ConfigRequest) error {
+func (s *atomixStore) Append(config *request.ConfigRequest) error {
 	bytes, err := proto.Marshal(config)
 	if err != nil {
 		return err
@@ -141,12 +122,12 @@ func (s *atomixStore) Append(config *ConfigRequest) error {
 	return s.requests.Append(ctx, bytes)
 }
 
-func (s *atomixStore) Replay(id ID, ch chan<- *ConfigRequest) error {
+func (s *atomixStore) Replay(id request.ID, ch chan<- *request.ConfigRequest) error {
 	itemsCh := make(chan []byte)
 	go func() {
 		i := int(id)
 		for item := range itemsCh {
-			request, err := decodeRequest(ID(i), item)
+			request, err := decodeRequest(request.ID(i), item)
 			if err == nil {
 				ch <- request
 			}
@@ -161,11 +142,11 @@ func (s *atomixStore) Replay(id ID, ch chan<- *ConfigRequest) error {
 	return slice.Items(context.Background(), itemsCh)
 }
 
-func (s *atomixStore) Watch(ch chan<- *ConfigRequest) error {
+func (s *atomixStore) Watch(ch chan<- *request.ConfigRequest) error {
 	watchCh := make(chan *list.Event)
 	go func() {
 		for event := range watchCh {
-			request, err := decodeRequest(ID(event.Index), event.Value)
+			request, err := decodeRequest(request.ID(event.Index), event.Value)
 			if err == nil {
 				ch <- request
 			}
@@ -179,8 +160,8 @@ func (s *atomixStore) Close() error {
 	return s.closer.Close()
 }
 
-func decodeRequest(id ID, value []byte) (*ConfigRequest, error) {
-	request := &ConfigRequest{}
+func decodeRequest(id request.ID, value []byte) (*request.ConfigRequest, error) {
+	request := &request.ConfigRequest{}
 	if err := proto.Unmarshal(value, request); err != nil {
 		return nil, err
 	}

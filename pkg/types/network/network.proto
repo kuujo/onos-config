@@ -4,7 +4,7 @@ package onos.config.network;
 
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
-import "github.com/onosproject/onos-config/pkg/store/change/change.proto";
+import "github.com/onosproject/onos-config/pkg/types/change/change.proto";
 
 // Status is the status of a configuration object
 enum Status {
@@ -35,7 +35,7 @@ message NetworkConfig {
     // id is the ID of the configuration
     string id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
 
-    uint64 request_id = 2 [(gogoproto.customname) = "RequestID", (gogoproto.casttype) = "github.com/onosproject/onos-config/pkg/store/request.ID"];
+    uint64 request_id = 2 [(gogoproto.customname) = "RequestID", (gogoproto.casttype) = "github.com/onosproject/onos-config/pkg/types/request.ID"];
 
     // revision is the configuration revision number
     uint64 revision = 3 [(gogoproto.casttype) = "Revision"];

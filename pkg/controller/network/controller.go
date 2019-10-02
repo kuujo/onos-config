@@ -6,6 +6,8 @@ import (
 	changestore "github.com/onosproject/onos-config/pkg/store/change"
 	leadershipstore "github.com/onosproject/onos-config/pkg/store/leadership"
 	networkstore "github.com/onosproject/onos-config/pkg/store/network"
+	changetype "github.com/onosproject/onos-config/pkg/types/change"
+	networktype "github.com/onosproject/onos-config/pkg/types/network"
 )
 
 // NewController returns a new network controller
@@ -35,10 +37,10 @@ type Reconciler struct {
 }
 
 func (c *Reconciler) Reconcile(id interface{}) (bool, error) {
-	return c.reconcile(id.(networkstore.ID))
+	return c.reconcile(id.(networktype.ID))
 }
 
-func (c *Reconciler) reconcile(id networkstore.ID) (bool, error) {
+func (c *Reconciler) reconcile(id networktype.ID) (bool, error) {
 	network, err := c.networks.Get(id)
 	if err != nil {
 		return false, err
@@ -56,7 +58,7 @@ func (c *Reconciler) reconcile(id networkstore.ID) (bool, error) {
 		// If the change has not been created, create it.
 		if change == nil {
 			change = networkChange
-			change.Status = changestore.Status_PENDING
+			change.Status = changetype.Status_PENDING
 			err = c.changes.Create(change)
 			if err != nil {
 				return false, err
@@ -65,9 +67,9 @@ func (c *Reconciler) reconcile(id networkstore.ID) (bool, error) {
 	}
 
 	// If the network status is APPLYING, ensure all device changes are in the APPLYING state.
-	if network.Status == networkstore.Status_APPLYING {
-		status := networkstore.Status_SUCCEEDED
-		reason := networkstore.Reason_ERROR
+	if network.Status == networktype.Status_APPLYING {
+		status := networktype.Status_SUCCEEDED
+		reason := networktype.Reason_ERROR
 		for _, id := range network.GetChangeIDs() {
 			change, err := c.changes.Get(id)
 			if err != nil {
@@ -75,33 +77,33 @@ func (c *Reconciler) reconcile(id networkstore.ID) (bool, error) {
 			}
 
 			// If the change is PENDING then change it to APPLYING
-			if change.Status == changestore.Status_PENDING {
-				change.Status = changestore.Status_APPLYING
-				status = networkstore.Status_APPLYING
+			if change.Status == changetype.Status_PENDING {
+				change.Status = changetype.Status_APPLYING
+				status = networktype.Status_APPLYING
 				err = c.changes.Update(change)
 				if err != nil {
 					return false, err
 				}
-			} else if change.Status == changestore.Status_APPLYING {
+			} else if change.Status == changetype.Status_APPLYING {
 				// If the change is APPLYING then ensure the network status is APPLYING
-				status = networkstore.Status_APPLYING
-			} else if change.Status == changestore.Status_FAILED {
+				status = networktype.Status_APPLYING
+			} else if change.Status == changetype.Status_FAILED {
 				// If the change is FAILED then set the network to FAILED
 				// If the change failure reason is UNAVAILABLE then all changes must be UNAVAILABLE, otherwise
 				// the network must be failed with an ERROR.
-				if status != networkstore.Status_FAILED {
+				if status != networktype.Status_FAILED {
 					switch change.Reason {
-					case changestore.Reason_ERROR:
-						reason = networkstore.Reason_ERROR
-					case changestore.Reason_UNAVAILABLE:
-						reason = networkstore.Reason_UNAVAILABLE
+					case changetype.Reason_ERROR:
+						reason = networktype.Reason_ERROR
+					case changetype.Reason_UNAVAILABLE:
+						reason = networktype.Reason_UNAVAILABLE
 					}
-				} else if reason == networkstore.Reason_UNAVAILABLE && change.Reason == changestore.Reason_ERROR {
-					reason = networkstore.Reason_ERROR
-				} else if reason == networkstore.Reason_ERROR && change.Reason == changestore.Reason_UNAVAILABLE {
-					reason = networkstore.Reason_ERROR
+				} else if reason == networktype.Reason_UNAVAILABLE && change.Reason == changetype.Reason_ERROR {
+					reason = networktype.Reason_ERROR
+				} else if reason == networktype.Reason_ERROR && change.Reason == changetype.Reason_UNAVAILABLE {
+					reason = networktype.Reason_ERROR
 				}
-				status = networkstore.Status_FAILED
+				status = networktype.Status_FAILED
 			}
 		}
 

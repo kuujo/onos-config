@@ -3,7 +3,7 @@ syntax = "proto3";
 package onos.config.request;
 
 import "gogoproto/gogo.proto";
-import "github.com/onosproject/onos-config/pkg/store/change/change.proto";
+import "github.com/onosproject/onos-config/pkg/types/change/change.proto";
 
 // ConfigRequest is a configuration config
 message ConfigRequest {

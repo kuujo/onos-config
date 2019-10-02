@@ -6,6 +6,8 @@ import (
 	leadershipstore "github.com/onosproject/onos-config/pkg/store/leadership"
 	networkstore "github.com/onosproject/onos-config/pkg/store/network"
 	requeststore "github.com/onosproject/onos-config/pkg/store/request"
+	networktype "github.com/onosproject/onos-config/pkg/types/network"
+	requesttype "github.com/onosproject/onos-config/pkg/types/request"
 	"github.com/onosproject/onos-topo/pkg/northbound/device"
 )
 
@@ -36,10 +38,10 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) Reconcile(id interface{}) (bool, error) {
-	return r.reconcile(id.(requeststore.ID))
+	return r.reconcile(id.(requesttype.ID))
 }
 
-func (r *Reconciler) reconcile(id requeststore.ID) (bool, error) {
+func (r *Reconciler) reconcile(id requesttype.ID) (bool, error) {
 	request, err := r.requests.Get(id)
 	if err != nil {
 		return false, err
@@ -53,10 +55,10 @@ func (r *Reconciler) reconcile(id requeststore.ID) (bool, error) {
 
 	// If the network has not been created, add it in the PENDING state
 	if network == nil {
-		network = &networkstore.NetworkConfig{
+		network = &networktype.NetworkConfig{
 			ID:        request.GetNetworkID(),
 			RequestID: request.ID,
-			Status:    networkstore.Status_PENDING,
+			Status:    networktype.Status_PENDING,
 			Changes:   request.Changes,
 		}
 		err = r.networks.Create(network)
@@ -66,8 +68,8 @@ func (r *Reconciler) reconcile(id requeststore.ID) (bool, error) {
 	}
 
 	// Replay requests starting at the low water mark.
-	ch := make(chan *requeststore.ConfigRequest)
-	if err := r.requests.Replay(requeststore.ID(r.lowMark), ch); err != nil {
+	ch := make(chan *requesttype.ConfigRequest)
+	if err := r.requests.Replay(requesttype.ID(r.lowMark), ch); err != nil {
 		return false, err
 	}
 
@@ -83,7 +85,7 @@ func (r *Reconciler) reconcile(id requeststore.ID) (bool, error) {
 			}
 
 			// If all prior requests have been completed and this request is completed, increment the low water mark.
-			if allComplete && network.Status == networkstore.Status_SUCCEEDED || network.Status == networkstore.Status_FAILED {
+			if allComplete && network.Status == networktype.Status_SUCCEEDED || network.Status == networktype.Status_FAILED {
 				r.lowMark++
 			} else {
 				allComplete = false
@@ -91,14 +93,14 @@ func (r *Reconciler) reconcile(id requeststore.ID) (bool, error) {
 
 			// If the previous request's devices intersect with this request's devices and the previous request
 			// is not yet complete, requeue the request.
-			if isIntersecting(request.GetDevices(), prevRequest.GetDevices()) && network.Status != networkstore.Status_SUCCEEDED && network.Status != networkstore.Status_FAILED {
+			if isIntersecting(request.GetDevices(), prevRequest.GetDevices()) && network.Status != networktype.Status_SUCCEEDED && network.Status != networktype.Status_FAILED {
 				return false, nil
 			}
 		}
 	}
 
 	// If we've made it this far, update the network config state to APPLYING.
-	network.Status = networkstore.Status_APPLYING
+	network.Status = networktype.Status_APPLYING
 	err = r.networks.Update(network)
 	if err != nil {
 		return false, err
