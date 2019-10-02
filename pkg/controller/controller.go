@@ -25,6 +25,7 @@ type Reconciler interface {
 func NewController() *Controller {
 	return &Controller{
 		activator:  &AlwaysActivator{},
+		watchers:   make([]Watcher, 0),
 		retryQueue: list.New(),
 	}
 }
