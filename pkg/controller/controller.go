@@ -144,7 +144,7 @@ func (c *Controller) reconcile(id interface{}) {
 		succeeded, err := reconciler.Reconcile(id)
 		if err != nil {
 			c.mu.Unlock()
-			time.Sleep(time.Duration(iteration*iteration*10) * time.Millisecond)
+			time.Sleep(time.Duration(iteration*2) * time.Millisecond)
 		} else if !succeeded {
 			c.retryQueue.PushBack(id)
 			c.mu.Unlock()
