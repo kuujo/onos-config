@@ -477,7 +477,7 @@ func Test_convertChangeToGnmi(t *testing.T) {
 
 	setRequest, parseError := values.NativeChangeToGnmiChange(change3)
 
-	assert.NilError(t, parseError, "Parsing error for Gnmi change request")
+	assert.NilError(t, parseError, "Parsing error for Gnmi change config")
 	assert.Equal(t, len(setRequest.Update), 1)
 
 	jsonstr, _ := json.Marshal(setRequest.Update[0])

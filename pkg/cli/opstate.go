@@ -53,7 +53,7 @@ func runOpstateCommand(cmd *cobra.Command, args []string) error {
 
 	stream, err := client.GetOpState(context.Background(), &diags.OpStateRequest{DeviceId: deviceID, Subscribe: subscribe})
 	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
+		return fmt.Errorf("failed to send config: %v", err)
 	}
 
 	for {

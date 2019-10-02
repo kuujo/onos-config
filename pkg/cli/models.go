@@ -64,7 +64,7 @@ func runListPluginsCommand(cmd *cobra.Command, args []string) error {
 
 	stream, err := client.ListRegisteredModels(context.Background(), &admin.ListModelsRequest{Verbose: verbose})
 	if err != nil {
-		return fmt.Errorf("Failed to send request: %v", err)
+		return fmt.Errorf("Failed to send config: %v", err)
 	}
 
 	for {

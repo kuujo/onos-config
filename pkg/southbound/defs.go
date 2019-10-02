@@ -31,7 +31,7 @@ type Target struct {
 	Ctx         context.Context
 }
 
-// SubscribeOptions is the gNMI subscription request options
+// SubscribeOptions is the gNMI subscription config options
 type SubscribeOptions struct {
 	UpdatesOnly       bool
 	Prefix            string

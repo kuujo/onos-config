@@ -11,5 +11,5 @@ message ConfigRequest {
     uint64 id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
 
     // changes is a set of changes to apply
-    repeated onos.config.change.Value changes = 2;
+    repeated onos.config.change.Change changes = 2;
 }

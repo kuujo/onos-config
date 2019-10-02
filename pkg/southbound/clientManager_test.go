@@ -285,7 +285,7 @@ func Test_GetWithBadString(t *testing.T) {
 
 	requestNull := ""
 	_, getEmptyErr := target.GetWithString(ctx, requestNull)
-	assert.ErrorContains(t, getEmptyErr, "empty request")
+	assert.ErrorContains(t, getEmptyErr, "empty config")
 
 	tearDown()
 }

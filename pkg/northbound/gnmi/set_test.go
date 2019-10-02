@@ -602,7 +602,7 @@ func Test_NetCfgSetWithDuplicateNameGiven(t *testing.T) {
 	assert.Equal(t, extension.Id.String(), strconv.Itoa(GnmiExtensionNetwkChangeID))
 	assert.Equal(t, string(extension.Msg), "TestChange")
 
-	// Now create a second request with different value but same (extension 100) name
+	// Now create a second config with different value but same (extension 100) name
 	typedValue2 := gnmi.TypedValue_StringVal{StringVal: "newValue2a"}
 	value2 := gnmi.TypedValue{Value: &typedValue2}
 	updatedPaths = make([]*gnmi.Update, 0)
@@ -680,7 +680,7 @@ func Test_doSingleDelete(t *testing.T) {
 	assert.Equal(t, string(extension.Msg), "TestChange")
 }
 
-// Test_doUpdateDeleteSet shows how a request with a delete and an update can be applied on a target
+// Test_doUpdateDeleteSet shows how a config with a delete and an update can be applied on a target
 func Test_doUpdateDeleteSet(t *testing.T) {
 	server, _ := setUp()
 	var deletePaths = make([]*gnmi.Path, 0)

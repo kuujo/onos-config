@@ -33,25 +33,28 @@ enum Reason {
 // NetworkConfig specifies the configuration for a network change
 message NetworkConfig {
     // id is the ID of the configuration
-    uint64 id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
+    string id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
 
-    uint64 revision = 2 [(gogoproto.casttype) = "Revision"];
+    uint64 request_id = 2 [(gogoproto.customname) = "RequestID", (gogoproto.casttype) = "github.com/onosproject/onos-config/pkg/store/request.ID"];
+
+    // revision is the configuration revision number
+    uint64 revision = 3 [(gogoproto.casttype) = "Revision"];
 
     // status is the current status of the configuration
-    Status status = 3;
+    Status status = 4;
 
     // reason indicates the reason the configuration failed
-    Reason reason = 4;
+    Reason reason = 5;
 
     // message is an optional status message
-    string message = 5;
+    string message = 6;
 
     // created is the time at which the configuration was created
-    google.protobuf.Timestamp created = 6 [(gogoproto.stdtime) = true];
+    google.protobuf.Timestamp created = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
     // updated is the time at which the configuration was last updated
-    google.protobuf.Timestamp updated = 7 [(gogoproto.stdtime) = true];
+    google.protobuf.Timestamp updated = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
     // changes is a set of changes to apply
-    repeated onos.config.change.Value changes = 8;
+    repeated onos.config.change.Change changes = 9;
 }

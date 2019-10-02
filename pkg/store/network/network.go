@@ -1,23 +1,9 @@
-// Copyright 2019-present Open Networking Foundation.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-// Package change defines change records for tracking device configuration changes.
-package change
+package network
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/atomix/atomix-go-client/pkg/client/map"
 	"github.com/atomix/atomix-go-client/pkg/client/primitive"
 	"github.com/atomix/atomix-go-client/pkg/client/session"
@@ -25,7 +11,9 @@ import (
 	"github.com/atomix/atomix-go-node/pkg/atomix"
 	"github.com/atomix/atomix-go-node/pkg/atomix/registry"
 	"github.com/gogo/protobuf/proto"
+	"github.com/onosproject/onos-config/pkg/store/change"
 	"github.com/onosproject/onos-config/pkg/store/utils"
+	"github.com/onosproject/onos-topo/pkg/northbound/device"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"io"
@@ -33,13 +21,32 @@ import (
 	"time"
 )
 
-const primitiveName = "change"
+const primitiveName = "network"
 
-// ID is a change identifier
+// ID is a network configuration identifier
 type ID string
 
 // Revision is the revision number
 type Revision uint64
+
+// GetChangeIDs returns a list of change IDs for the network
+func (c *NetworkConfig) GetChangeIDs() []change.ID {
+	changes := c.GetChanges()
+	if changes == nil {
+		return nil
+	}
+
+	ids := make([]change.ID, len(changes))
+	for i, change := range changes {
+		ids[i] = c.GetChangeID(change.DeviceID)
+	}
+	return ids
+}
+
+// GetChangeID returns the ID for the change to the given device
+func (c *NetworkConfig) GetChangeID(deviceID device.ID) change.ID {
+	return change.ID(fmt.Sprintf("network-%d-%s", c.ID, deviceID))
+}
 
 // NewAtomixStore returns a new persistent Store
 func NewAtomixStore() (Store, error) {
@@ -100,27 +107,27 @@ func startLocalNode() (*atomix.Node, *grpc.ClientConn) {
 	return node, conn
 }
 
-// Store stores DeviceChanges
+// Store stores NetworkConfig changes
 type Store interface {
 	io.Closer
 
-	// Get gets a device change
-	Get(id ID) (*Change, error)
+	// Get gets a network configuration
+	Get(id ID) (*NetworkConfig, error)
 
-	// Create creates a new device change
-	Create(config *Change) error
+	// Create creates a new network configuration
+	Create(config *NetworkConfig) error
 
-	// Update updates an existing device change
-	Update(config *Change) error
+	// Update updates an existing network configuration
+	Update(config *NetworkConfig) error
 
-	// Delete deletes a device change
-	Delete(config *Change) error
+	// Delete deletes a network configuration
+	Delete(config *NetworkConfig) error
 
-	// List lists device change
-	List(chan<- *Change) error
+	// List lists network configurations
+	List(chan<- *NetworkConfig) error
 
-	// Watch watches the device change store for changes
-	Watch(chan<- *Change) error
+	// Watch watches the network configuration store for changes
+	Watch(chan<- *NetworkConfig) error
 }
 
 // atomixStore is the default implementation of the NetworkConfig store
@@ -129,7 +136,7 @@ type atomixStore struct {
 	closer  io.Closer
 }
 
-func (s *atomixStore) Get(id ID) (*Change, error) {
+func (s *atomixStore) Get(id ID) (*NetworkConfig, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -139,10 +146,10 @@ func (s *atomixStore) Get(id ID) (*Change, error) {
 	} else if kv == nil {
 		return nil, nil
 	}
-	return decodeChange(kv.Key, kv.Value, kv.Version)
+	return decodeConfig(kv.Key, kv.Value, kv.Version)
 }
 
-func (s *atomixStore) Create(config *Change) error {
+func (s *atomixStore) Create(config *NetworkConfig) error {
 	if config.Revision != 0 {
 		return errors.New("not a new object")
 	}
@@ -166,7 +173,7 @@ func (s *atomixStore) Create(config *Change) error {
 	return nil
 }
 
-func (s *atomixStore) Update(config *Change) error {
+func (s *atomixStore) Update(config *NetworkConfig) error {
 	if config.Revision == 0 {
 		return errors.New("not a stored object")
 	}
@@ -189,7 +196,7 @@ func (s *atomixStore) Update(config *Change) error {
 	return nil
 }
 
-func (s *atomixStore) Delete(config *Change) error {
+func (s *atomixStore) Delete(config *NetworkConfig) error {
 	if config.Revision == 0 {
 		return errors.New("not a stored object")
 	}
@@ -197,11 +204,12 @@ func (s *atomixStore) Delete(config *Change) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
+	config.Updated = time.Now()
 	_, err := s.configs.Remove(ctx, string(config.ID), _map.IfVersion(int64(config.Revision)))
 	return err
 }
 
-func (s *atomixStore) List(ch chan<- *Change) error {
+func (s *atomixStore) List(ch chan<- *NetworkConfig) error {
 	mapCh := make(chan *_map.KeyValue)
 	if err := s.configs.Entries(context.Background(), mapCh); err != nil {
 		return err
@@ -210,7 +218,7 @@ func (s *atomixStore) List(ch chan<- *Change) error {
 	go func() {
 		defer close(ch)
 		for kv := range mapCh {
-			if device, err := decodeChange(kv.Key, kv.Value, kv.Version); err == nil {
+			if device, err := decodeConfig(kv.Key, kv.Value, kv.Version); err == nil {
 				ch <- device
 			}
 		}
@@ -218,7 +226,7 @@ func (s *atomixStore) List(ch chan<- *Change) error {
 	return nil
 }
 
-func (s *atomixStore) Watch(ch chan<- *Change) error {
+func (s *atomixStore) Watch(ch chan<- *NetworkConfig) error {
 	mapCh := make(chan *_map.Event)
 	if err := s.configs.Watch(context.Background(), mapCh, _map.WithReplay()); err != nil {
 		return err
@@ -227,7 +235,7 @@ func (s *atomixStore) Watch(ch chan<- *Change) error {
 	go func() {
 		defer close(ch)
 		for event := range mapCh {
-			if config, err := decodeChange(event.Key, event.Value, event.Version); err == nil {
+			if config, err := decodeConfig(event.Key, event.Value, event.Version); err == nil {
 				ch <- config
 			}
 		}
@@ -240,8 +248,8 @@ func (s *atomixStore) Close() error {
 	return s.closer.Close()
 }
 
-func decodeChange(key string, value []byte, version int64) (*Change, error) {
-	config := &Change{}
+func decodeConfig(key string, value []byte, version int64) (*NetworkConfig, error) {
+	config := &NetworkConfig{}
 	if err := proto.Unmarshal(value, config); err != nil {
 		return nil, err
 	}

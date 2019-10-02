@@ -20,41 +20,72 @@ enum Status {
     FAILED = 3;
 }
 
-// DeviceChange represents a configuration change to a single device
-message DeviceChange {
+// Reason is a failure reason
+enum Reason {
+    // ERROR indicates an error occurred
+    ERROR = 0;
+
+    // UNAVAILABLE indicates the device was unavailable
+    UNAVAILABLE = 1;
+}
+
+// Change represents a configuration change to a single device
+message Change {
     // id is the ID of the change
-    uint64 id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
+    string id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
 
     // parent_id is the ID of the parent NetworkConfig
-    uint64 parent_id = 2 [(gogoproto.customname) = "ParentID", (gogoproto.casttype) = "ID"];
+    uint64 parent_id = 2 [(gogoproto.customname) = "NetworkID", (gogoproto.casttype) = "github.com/onosproject/onos-config/pkg/store/network.ID"];
+
+    // revision is the configuration revision number
+    uint64 revision = 3 [(gogoproto.casttype) = "Revision"];
+
+    // device_id is the ID of the device to change
+    string device_id = 4 [(gogoproto.customname) = "DeviceID", (gogoproto.casttype) = "github.com/onosproject/onos-topo/pkg/northbound/device.ID"];
+
+    // device_version is the version of the device to change
+    string device_version = 5;
 
     // status is the current status of the configuration
-    Status status = 3;
+    Status status = 6;
+
+    // reason indicates the reason the change failed
+    Reason reason = 7;
 
     // message is an optional status message
-    string message = 4;
+    string message = 8;
 
     // created is the time at which the configuration was created
-    google.protobuf.Timestamp created = 5 [(gogoproto.stdtime) = true];
+    google.protobuf.Timestamp created = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
     // updated is the time at which the configuration was last updated
-    google.protobuf.Timestamp updated = 6 [(gogoproto.stdtime) = true];
+    google.protobuf.Timestamp updated = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 
-    // change is the change value
-    Value change = 7;
+    // values is the values to change
+    repeated Value values = 11;
+}
+
+// Type is a value type constant
+enum Type {
+    EMPTY = 0;
+    STRING = 1;
+    INT = 2;
+    INT64 = 3;
+    UINT64 = 4;
+    BOOL = 5;
+    DECIMAL = 6;
+    FLOAT = 7;
+    BYTES = 8;
 }
 
 // ChangeValue is a change to a specific device
 message Value {
-    // device_id is the ID of the device to change
-    string device_id = 1 [(gogoproto.customname) = "DeviceID", (gogoproto.casttype) = "github.com/onosproject/onos-topo/pkg/northbound/device.ID"];
-
-    // device_version is the version of the device to change
-    string device_version = 2;
-
     // path is the path to change
     string path = 3;
 
+    // type is the type of the value
+    Type type = 4;
+
     // value is the value to change
-    bytes value = 4;
+    bytes value = 5;
 }

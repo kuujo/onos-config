@@ -17,7 +17,7 @@ Package main of cmd/profiling is for profiling some key functions.
 
 Run the program from anywhere
 
-	time go run github.com/opennetworkinglab/onos-config/profiling
+	time go run github.com/opennetworkinglab/onos-request/profiling
 
 and then run to view the output in a web browser (requires graphviz to be installed)
 

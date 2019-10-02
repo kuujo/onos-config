@@ -9,6 +9,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	github_com_onosproject_onos_config_pkg_store_network "github.com/onosproject/onos-config/pkg/store/network"
 	github_com_onosproject_onos_topo_pkg_northbound_device "github.com/onosproject/onos-topo/pkg/northbound/device"
 	io "io"
 	math "math"
@@ -64,36 +65,119 @@ func (Status) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_5ba07d2127422fb4, []int{0}
 }
 
-// DeviceChange represents a configuration change to a single device
-type DeviceChange struct {
-	// id is the ID of the change
-	ID ID `protobuf:"varint,1,opt,name=id,proto3,casttype=ID" json:"id,omitempty"`
-	// parent_id is the ID of the parent NetworkConfig
-	ParentID ID `protobuf:"varint,2,opt,name=parent_id,json=parentId,proto3,casttype=ID" json:"parent_id,omitempty"`
-	// status is the current status of the configuration
-	Status Status `protobuf:"varint,3,opt,name=status,proto3,enum=onos.config.change.Status" json:"status,omitempty"`
-	// message is an optional status message
-	Message string `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
-	// created is the time at which the configuration was created
-	Created *time.Time `protobuf:"bytes,5,opt,name=created,proto3,stdtime" json:"created,omitempty"`
-	// updated is the time at which the configuration was last updated
-	Updated *time.Time `protobuf:"bytes,6,opt,name=updated,proto3,stdtime" json:"updated,omitempty"`
-	// change is the change value
-	Change *Value `protobuf:"bytes,7,opt,name=change,proto3" json:"change,omitempty"`
+// Reason is a failure reason
+type Reason int32
+
+const (
+	// ERROR indicates an error occurred
+	Reason_ERROR Reason = 0
+	// UNAVAILABLE indicates the device was unavailable
+	Reason_UNAVAILABLE Reason = 1
+)
+
+var Reason_name = map[int32]string{
+	0: "ERROR",
+	1: "UNAVAILABLE",
 }
 
-func (m *DeviceChange) Reset()         { *m = DeviceChange{} }
-func (m *DeviceChange) String() string { return proto.CompactTextString(m) }
-func (*DeviceChange) ProtoMessage()    {}
-func (*DeviceChange) Descriptor() ([]byte, []int) {
+var Reason_value = map[string]int32{
+	"ERROR":       0,
+	"UNAVAILABLE": 1,
+}
+
+func (x Reason) String() string {
+	return proto.EnumName(Reason_name, int32(x))
+}
+
+func (Reason) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_5ba07d2127422fb4, []int{1}
+}
+
+// Type is a value type constant
+type Type int32
+
+const (
+	Type_EMPTY   Type = 0
+	Type_STRING  Type = 1
+	Type_INT     Type = 2
+	Type_INT64   Type = 3
+	Type_UINT64  Type = 4
+	Type_BOOL    Type = 5
+	Type_DECIMAL Type = 6
+	Type_FLOAT   Type = 7
+	Type_BYTES   Type = 8
+)
+
+var Type_name = map[int32]string{
+	0: "EMPTY",
+	1: "STRING",
+	2: "INT",
+	3: "INT64",
+	4: "UINT64",
+	5: "BOOL",
+	6: "DECIMAL",
+	7: "FLOAT",
+	8: "BYTES",
+}
+
+var Type_value = map[string]int32{
+	"EMPTY":   0,
+	"STRING":  1,
+	"INT":     2,
+	"INT64":   3,
+	"UINT64":  4,
+	"BOOL":    5,
+	"DECIMAL": 6,
+	"FLOAT":   7,
+	"BYTES":   8,
+}
+
+func (x Type) String() string {
+	return proto.EnumName(Type_name, int32(x))
+}
+
+func (Type) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_5ba07d2127422fb4, []int{2}
+}
+
+// Change represents a configuration change to a single device
+type Change struct {
+	// id is the ID of the change
+	ID ID `protobuf:"bytes,1,opt,name=id,proto3,casttype=ID" json:"id,omitempty"`
+	// parent_id is the ID of the parent NetworkConfig
+	NetworkID github_com_onosproject_onos_config_pkg_store_network.ID `protobuf:"varint,2,opt,name=parent_id,json=parentId,proto3,casttype=github.com/onosproject/onos-config/pkg/store/network.ID" json:"parent_id,omitempty"`
+	// revision is the configuration revision number
+	Revision Revision `protobuf:"varint,3,opt,name=revision,proto3,casttype=Revision" json:"revision,omitempty"`
+	// device_id is the ID of the device to change
+	DeviceID github_com_onosproject_onos_topo_pkg_northbound_device.ID `protobuf:"bytes,4,opt,name=device_id,json=deviceId,proto3,casttype=github.com/onosproject/onos-topo/pkg/northbound/device.ID" json:"device_id,omitempty"`
+	// device_version is the version of the device to change
+	DeviceVersion string `protobuf:"bytes,5,opt,name=device_version,json=deviceVersion,proto3" json:"device_version,omitempty"`
+	// status is the current status of the configuration
+	Status Status `protobuf:"varint,6,opt,name=status,proto3,enum=onos.config.change.Status" json:"status,omitempty"`
+	// reason indicates the reason the change failed
+	Reason Reason `protobuf:"varint,7,opt,name=reason,proto3,enum=onos.config.change.Reason" json:"reason,omitempty"`
+	// message is an optional status message
+	Message string `protobuf:"bytes,8,opt,name=message,proto3" json:"message,omitempty"`
+	// created is the time at which the configuration was created
+	Created time.Time `protobuf:"bytes,9,opt,name=created,proto3,stdtime" json:"created"`
+	// updated is the time at which the configuration was last updated
+	Updated time.Time `protobuf:"bytes,10,opt,name=updated,proto3,stdtime" json:"updated"`
+	// values is the values to change
+	Values []*Value `protobuf:"bytes,11,rep,name=values,proto3" json:"values,omitempty"`
+}
+
+func (m *Change) Reset()         { *m = Change{} }
+func (m *Change) String() string { return proto.CompactTextString(m) }
+func (*Change) ProtoMessage()    {}
+func (*Change) Descriptor() ([]byte, []int) {
 	return fileDescriptor_5ba07d2127422fb4, []int{0}
 }
-func (m *DeviceChange) XXX_Unmarshal(b []byte) error {
+func (m *Change) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *DeviceChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Change) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_DeviceChange.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Change.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -103,77 +187,103 @@ func (m *DeviceChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *DeviceChange) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeviceChange.Merge(m, src)
+func (m *Change) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Change.Merge(m, src)
 }
-func (m *DeviceChange) XXX_Size() int {
+func (m *Change) XXX_Size() int {
 	return m.Size()
 }
-func (m *DeviceChange) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeviceChange.DiscardUnknown(m)
+func (m *Change) XXX_DiscardUnknown() {
+	xxx_messageInfo_Change.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DeviceChange proto.InternalMessageInfo
+var xxx_messageInfo_Change proto.InternalMessageInfo
 
-func (m *DeviceChange) GetID() ID {
+func (m *Change) GetID() ID {
 	if m != nil {
 		return m.ID
 	}
-	return 0
+	return ""
 }
 
-func (m *DeviceChange) GetParentID() ID {
+func (m *Change) GetNetworkID() github_com_onosproject_onos_config_pkg_store_network.ID {
 	if m != nil {
-		return m.ParentID
+		return m.NetworkID
 	}
 	return 0
 }
 
-func (m *DeviceChange) GetStatus() Status {
+func (m *Change) GetRevision() Revision {
+	if m != nil {
+		return m.Revision
+	}
+	return 0
+}
+
+func (m *Change) GetDeviceID() github_com_onosproject_onos_topo_pkg_northbound_device.ID {
+	if m != nil {
+		return m.DeviceID
+	}
+	return ""
+}
+
+func (m *Change) GetDeviceVersion() string {
+	if m != nil {
+		return m.DeviceVersion
+	}
+	return ""
+}
+
+func (m *Change) GetStatus() Status {
 	if m != nil {
 		return m.Status
 	}
 	return Status_PENDING
 }
 
-func (m *DeviceChange) GetMessage() string {
+func (m *Change) GetReason() Reason {
+	if m != nil {
+		return m.Reason
+	}
+	return Reason_ERROR
+}
+
+func (m *Change) GetMessage() string {
 	if m != nil {
 		return m.Message
 	}
 	return ""
 }
 
-func (m *DeviceChange) GetCreated() *time.Time {
+func (m *Change) GetCreated() time.Time {
 	if m != nil {
 		return m.Created
 	}
-	return nil
+	return time.Time{}
 }
 
-func (m *DeviceChange) GetUpdated() *time.Time {
+func (m *Change) GetUpdated() time.Time {
 	if m != nil {
 		return m.Updated
 	}
-	return nil
+	return time.Time{}
 }
 
-func (m *DeviceChange) GetChange() *Value {
+func (m *Change) GetValues() []*Value {
 	if m != nil {
-		return m.Change
+		return m.Values
 	}
 	return nil
 }
 
 // ChangeValue is a change to a specific device
 type Value struct {
-	// device_id is the ID of the device to change
-	DeviceID github_com_onosproject_onos_topo_pkg_northbound_device.ID `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3,casttype=github.com/onosproject/onos-topo/pkg/northbound/device.ID" json:"device_id,omitempty"`
-	// device_version is the version of the device to change
-	DeviceVersion string `protobuf:"bytes,2,opt,name=device_version,json=deviceVersion,proto3" json:"device_version,omitempty"`
 	// path is the path to change
 	Path string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	// type is the type of the value
+	Type Type `protobuf:"varint,4,opt,name=type,proto3,enum=onos.config.change.Type" json:"type,omitempty"`
 	// value is the value to change
-	Value []byte `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	Value []byte `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
 }
 
 func (m *Value) Reset()         { *m = Value{} }
@@ -209,25 +319,18 @@ func (m *Value) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Value proto.InternalMessageInfo
 
-func (m *Value) GetDeviceID() github_com_onosproject_onos_topo_pkg_northbound_device.ID {
-	if m != nil {
-		return m.DeviceID
-	}
-	return ""
-}
-
-func (m *Value) GetDeviceVersion() string {
-	if m != nil {
-		return m.DeviceVersion
-	}
-	return ""
-}
-
 func (m *Value) GetPath() string {
 	if m != nil {
 		return m.Path
 	}
 	return ""
+}
+
+func (m *Value) GetType() Type {
+	if m != nil {
+		return m.Type
+	}
+	return Type_EMPTY
 }
 
 func (m *Value) GetValue() []byte {
@@ -239,48 +342,61 @@ func (m *Value) GetValue() []byte {
 
 func init() {
 	proto.RegisterEnum("onos.config.change.Status", Status_name, Status_value)
-	proto.RegisterType((*DeviceChange)(nil), "onos.config.change.DeviceChange")
+	proto.RegisterEnum("onos.config.change.Reason", Reason_name, Reason_value)
+	proto.RegisterEnum("onos.config.change.Type", Type_name, Type_value)
+	proto.RegisterType((*Change)(nil), "onos.config.change.Change")
 	proto.RegisterType((*Value)(nil), "onos.config.change.Value")
 }
 
 func init() { proto.RegisterFile("pkg/store/change/change.proto", fileDescriptor_5ba07d2127422fb4) }
 
 var fileDescriptor_5ba07d2127422fb4 = []byte{
-	// 488 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0xcd, 0xba, 0xa9, 0x13, 0x4f, 0xd3, 0x2a, 0x5a, 0xf5, 0x60, 0x22, 0x70, 0xa2, 0x4a, 0x48,
-	0x11, 0x12, 0x6b, 0x11, 0x4e, 0x70, 0x40, 0x6a, 0x62, 0x83, 0x2c, 0x55, 0x55, 0xe4, 0x42, 0x25,
-	0x4e, 0x95, 0x63, 0x6f, 0x1c, 0x43, 0xe3, 0xb5, 0xec, 0x75, 0xbe, 0xa3, 0x9f, 0xc4, 0x91, 0x63,
-	0x4f, 0x88, 0x53, 0x41, 0xce, 0x5f, 0x70, 0x42, 0x9e, 0xb5, 0xb9, 0xc0, 0x81, 0x4b, 0xf2, 0xe6,
-	0xf9, 0xbd, 0xf1, 0xcc, 0x1b, 0xc3, 0x93, 0xec, 0x73, 0x6c, 0x17, 0x52, 0xe4, 0xdc, 0x0e, 0x37,
-	0x41, 0x1a, 0xb7, 0x7f, 0x2c, 0xcb, 0x85, 0x14, 0x94, 0x8a, 0x54, 0x14, 0x2c, 0x14, 0xe9, 0x3a,
-	0x89, 0x99, 0x7a, 0x32, 0x1a, 0xc7, 0x42, 0xc4, 0xb7, 0xdc, 0x46, 0xc5, 0xaa, 0x5c, 0xdb, 0x32,
-	0xd9, 0xf2, 0x42, 0x06, 0xdb, 0x4c, 0x99, 0x46, 0xa7, 0xb1, 0x88, 0x05, 0x42, 0xbb, 0x46, 0x8a,
-	0x3d, 0xfb, 0xa6, 0xc1, 0xc0, 0xe1, 0xbb, 0x24, 0xe4, 0x0b, 0xec, 0x43, 0x1f, 0x83, 0x96, 0x44,
-	0x26, 0x99, 0x90, 0x69, 0x77, 0x3e, 0xa8, 0x1e, 0xc6, 0x9a, 0xe7, 0xfc, 0xc2, 0x5f, 0x5f, 0x4b,
-	0x22, 0x6a, 0x83, 0x91, 0x05, 0x39, 0x4f, 0xe5, 0x4d, 0x12, 0x99, 0x1a, 0x8a, 0x68, 0xf5, 0x30,
-	0xee, 0x2f, 0x91, 0xfc, 0x23, 0xed, 0x2b, 0x91, 0x17, 0xd1, 0x19, 0xe8, 0x85, 0x0c, 0x64, 0x59,
-	0x98, 0x07, 0x13, 0x32, 0x3d, 0x99, 0x8d, 0xd8, 0xdf, 0xb3, 0xb3, 0x2b, 0x54, 0xf8, 0x8d, 0x92,
-	0x9a, 0xd0, 0xdb, 0xf2, 0xa2, 0x08, 0x62, 0x6e, 0x76, 0x27, 0x64, 0x6a, 0xf8, 0x6d, 0x49, 0x5f,
-	0x43, 0x2f, 0xcc, 0x79, 0x20, 0x79, 0x64, 0x1e, 0x4e, 0xc8, 0xf4, 0x68, 0x36, 0x62, 0x6a, 0x6d,
-	0xd6, 0xae, 0xcd, 0xde, 0xb7, 0x6b, 0xcf, 0xbb, 0x77, 0x3f, 0xc6, 0xc4, 0x6f, 0x0d, 0xb5, 0xb7,
-	0xcc, 0x22, 0xf4, 0xea, 0xff, 0xeb, 0x6d, 0x0c, 0xf4, 0x05, 0xe8, 0x6a, 0x54, 0xb3, 0x87, 0xd6,
-	0x47, 0xff, 0xda, 0xe2, 0x3a, 0xb8, 0x2d, 0xb9, 0xdf, 0x08, 0xcf, 0xbe, 0x10, 0x38, 0x44, 0x86,
-	0xae, 0xc1, 0x88, 0x30, 0xe1, 0x9b, 0x26, 0x58, 0x63, 0xee, 0xd5, 0x99, 0xa9, 0xd8, 0x31, 0xb3,
-	0x57, 0x71, 0x22, 0x37, 0xe5, 0x8a, 0x85, 0x62, 0x6b, 0xd7, 0x9d, 0xb3, 0x5c, 0x7c, 0xe2, 0xa1,
-	0x44, 0xfc, 0x5c, 0x8a, 0x4c, 0xd8, 0xf5, 0x07, 0x91, 0x8a, 0x5c, 0x6e, 0x56, 0xa2, 0x4c, 0x23,
-	0x5b, 0x35, 0x64, 0x75, 0xd4, 0x0a, 0x7a, 0x11, 0x7d, 0x0a, 0x27, 0xcd, 0x7b, 0x76, 0x3c, 0x2f,
-	0x12, 0x91, 0xe2, 0x81, 0x0c, 0xff, 0x58, 0xb1, 0xd7, 0x8a, 0xa4, 0x14, 0xba, 0x59, 0x20, 0x37,
-	0x78, 0x0f, 0xc3, 0x47, 0x4c, 0x4f, 0xe1, 0x70, 0x57, 0xcf, 0x8a, 0x79, 0x0f, 0x7c, 0x55, 0x3c,
-	0x7b, 0x03, 0xba, 0xba, 0x0c, 0x3d, 0x82, 0xde, 0xd2, 0xbd, 0x74, 0xbc, 0xcb, 0x77, 0xc3, 0x0e,
-	0x1d, 0x40, 0xff, 0x7c, 0xb9, 0xbc, 0xf8, 0x58, 0x57, 0x84, 0x1e, 0x83, 0x71, 0xf5, 0x61, 0xb1,
-	0x70, 0x5d, 0xc7, 0x75, 0x86, 0x1a, 0x05, 0xd0, 0xdf, 0x9e, 0x7b, 0x17, 0xae, 0x33, 0x3c, 0x98,
-	0x9b, 0x5f, 0x2b, 0x8b, 0xdc, 0x57, 0x16, 0xf9, 0x59, 0x59, 0xe4, 0x6e, 0x6f, 0x75, 0xee, 0xf7,
-	0x56, 0xe7, 0xfb, 0xde, 0xea, 0xac, 0x74, 0x8c, 0xfc, 0xe5, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x9e, 0x19, 0xf9, 0x2d, 0xe8, 0x02, 0x00, 0x00,
+	// 665 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0xc1, 0x6e, 0xda, 0x4a,
+	0x14, 0xc5, 0x60, 0x8c, 0x3d, 0x90, 0x3c, 0x6b, 0x94, 0x85, 0x1f, 0x7a, 0x0f, 0x50, 0xd4, 0x4a,
+	0x28, 0x6a, 0x6d, 0x95, 0x56, 0xad, 0xba, 0x89, 0x04, 0xd8, 0x69, 0x2d, 0x39, 0x80, 0x06, 0x27,
+	0x52, 0x56, 0x91, 0xc1, 0x13, 0xe3, 0x24, 0x78, 0x2c, 0x7b, 0xa0, 0xca, 0x5f, 0xe4, 0xb3, 0xb2,
+	0xcc, 0xb2, 0x2b, 0x5a, 0x91, 0xbf, 0x48, 0x37, 0xd5, 0xcc, 0x40, 0xbb, 0x68, 0x5a, 0xa9, 0x1b,
+	0xfb, 0xcc, 0xbd, 0xe7, 0x9c, 0x39, 0x33, 0x77, 0xc0, 0xff, 0xe9, 0x55, 0x64, 0xe5, 0x94, 0x64,
+	0xd8, 0x9a, 0xce, 0x82, 0x24, 0xda, 0xfe, 0xcc, 0x34, 0x23, 0x94, 0x40, 0x48, 0x12, 0x92, 0x9b,
+	0x53, 0x92, 0x5c, 0xc4, 0x91, 0x29, 0x3a, 0xf5, 0x66, 0x44, 0x48, 0x74, 0x8d, 0x2d, 0xce, 0x98,
+	0x2c, 0x2e, 0x2c, 0x1a, 0xcf, 0x71, 0x4e, 0x83, 0x79, 0x2a, 0x44, 0xf5, 0xbd, 0x88, 0x44, 0x84,
+	0x43, 0x8b, 0x21, 0x51, 0xdd, 0xff, 0x26, 0x03, 0xa5, 0xcf, 0x1d, 0xe0, 0x7f, 0xa0, 0x18, 0x87,
+	0x86, 0xd4, 0x92, 0xda, 0x5a, 0xaf, 0xb6, 0x5e, 0x35, 0x8b, 0xae, 0xfd, 0xc8, 0xbf, 0xa8, 0x18,
+	0x87, 0x10, 0x03, 0x2d, 0x0d, 0x32, 0x9c, 0xd0, 0xf3, 0x38, 0x34, 0x8a, 0x2d, 0xa9, 0x2d, 0xf7,
+	0x3e, 0xae, 0x57, 0x4d, 0x6d, 0x80, 0xe9, 0x27, 0x92, 0x5d, 0x71, 0xee, 0xbb, 0x28, 0xa6, 0xb3,
+	0xc5, 0xc4, 0x9c, 0x92, 0xb9, 0xc5, 0x22, 0xa6, 0x19, 0xb9, 0xc4, 0x53, 0xca, 0xf1, 0x4b, 0x11,
+	0xd7, 0xfa, 0x79, 0xb2, 0x44, 0x28, 0x4d, 0xd7, 0x46, 0xaa, 0xb0, 0x76, 0x43, 0xd8, 0x06, 0x6a,
+	0x86, 0x97, 0x71, 0x1e, 0x93, 0xc4, 0x28, 0xf1, 0x5d, 0x6a, 0x8f, 0xab, 0xa6, 0x8a, 0x36, 0x35,
+	0xf4, 0xa3, 0x0b, 0x2f, 0x80, 0x16, 0xe2, 0x65, 0x3c, 0xc5, 0x2c, 0x90, 0xcc, 0x53, 0xbb, 0xeb,
+	0x55, 0x53, 0xb5, 0x79, 0x91, 0xe7, 0x79, 0xff, 0xa7, 0x3c, 0x94, 0xa4, 0x84, 0xa7, 0x49, 0x48,
+	0x46, 0x67, 0x13, 0xb2, 0x48, 0x42, 0x4b, 0x18, 0xf2, 0x44, 0x02, 0xba, 0x21, 0x7c, 0x0e, 0x76,
+	0x37, 0xfb, 0x2c, 0x71, 0xc6, 0x73, 0x95, 0xd9, 0x66, 0x68, 0x47, 0x54, 0x4f, 0x45, 0x11, 0x76,
+	0x80, 0x92, 0xd3, 0x80, 0x2e, 0x72, 0x43, 0x69, 0x49, 0xed, 0xdd, 0x4e, 0xdd, 0xfc, 0x75, 0x48,
+	0xe6, 0x98, 0x33, 0xd0, 0x86, 0xc9, 0x34, 0x19, 0x0e, 0x72, 0x92, 0x18, 0x95, 0xdf, 0x6b, 0x10,
+	0x67, 0xa0, 0x0d, 0x13, 0x1a, 0xa0, 0x32, 0xc7, 0x79, 0x1e, 0x44, 0xd8, 0x50, 0x79, 0x8e, 0xed,
+	0x12, 0x1e, 0x82, 0xca, 0x34, 0xc3, 0x01, 0xc5, 0xa1, 0xa1, 0xb5, 0xa4, 0x76, 0xb5, 0x53, 0x37,
+	0xc5, 0x9b, 0x30, 0xb7, 0x6f, 0xc2, 0xf4, 0xb7, 0x6f, 0xa2, 0xa7, 0xde, 0xad, 0x9a, 0x85, 0xdb,
+	0x2f, 0x4d, 0x09, 0x6d, 0x45, 0x4c, 0xbf, 0x48, 0x43, 0xae, 0x07, 0x7f, 0xa3, 0xdf, 0x88, 0xe0,
+	0x2b, 0xa0, 0x2c, 0x83, 0xeb, 0x05, 0xce, 0x8d, 0x6a, 0xab, 0xd4, 0xae, 0x76, 0xfe, 0x7d, 0xea,
+	0x34, 0xa7, 0x8c, 0x81, 0x36, 0xc4, 0xfd, 0x73, 0x50, 0xe6, 0x05, 0x08, 0x81, 0x9c, 0x06, 0x74,
+	0xc6, 0x47, 0xae, 0x21, 0x8e, 0xe1, 0x0b, 0x20, 0xd3, 0x9b, 0x14, 0xf3, 0xd9, 0xee, 0x76, 0x8c,
+	0xa7, 0xdc, 0xfc, 0x9b, 0x14, 0x23, 0xce, 0x82, 0x7b, 0xa0, 0xcc, 0x4d, 0xf9, 0x74, 0x6a, 0x48,
+	0x2c, 0x0e, 0x0e, 0x81, 0x22, 0xee, 0x1c, 0x56, 0x41, 0x65, 0xe4, 0x0c, 0x6c, 0x77, 0xf0, 0x41,
+	0x2f, 0xc0, 0x1a, 0x50, 0xbb, 0xa3, 0x91, 0x77, 0xc6, 0x56, 0x12, 0xdc, 0x01, 0xda, 0xf8, 0xa4,
+	0xdf, 0x77, 0x1c, 0xdb, 0xb1, 0xf5, 0x22, 0x04, 0x40, 0x39, 0xea, 0xba, 0x9e, 0x63, 0xeb, 0xa5,
+	0x83, 0x67, 0x40, 0x11, 0xf7, 0x0f, 0x35, 0x50, 0x76, 0x10, 0x1a, 0x22, 0xbd, 0x00, 0xff, 0x01,
+	0xd5, 0x93, 0x41, 0xf7, 0xb4, 0xeb, 0x7a, 0xdd, 0x9e, 0xe7, 0xe8, 0xd2, 0xc1, 0x25, 0x90, 0x59,
+	0x12, 0xce, 0x39, 0x1e, 0xf9, 0x67, 0x7a, 0x81, 0x99, 0x8c, 0x7d, 0x24, 0xfc, 0x2b, 0xa0, 0xe4,
+	0x0e, 0x7c, 0xbd, 0xc8, 0xfa, 0xee, 0xc0, 0x7f, 0xfb, 0x46, 0x2f, 0xb1, 0xfe, 0x89, 0xc0, 0x32,
+	0x54, 0x81, 0xdc, 0x1b, 0x0e, 0x3d, 0xbd, 0xcc, 0x42, 0xda, 0x4e, 0xdf, 0x3d, 0xee, 0x7a, 0xba,
+	0xc2, 0xd8, 0x47, 0xde, 0xb0, 0xeb, 0xeb, 0x15, 0x06, 0x7b, 0x67, 0xbe, 0x33, 0xd6, 0xd5, 0x9e,
+	0x71, 0xb7, 0x6e, 0x48, 0xf7, 0xeb, 0x86, 0xf4, 0x75, 0xdd, 0x90, 0x6e, 0x1f, 0x1a, 0x85, 0xfb,
+	0x87, 0x46, 0xe1, 0xf3, 0x43, 0xa3, 0x30, 0x51, 0xf8, 0x98, 0x5e, 0x7f, 0x0f, 0x00, 0x00, 0xff,
+	0xff, 0xa1, 0x51, 0xc6, 0xf2, 0x3d, 0x04, 0x00, 0x00,
 }
 
-func (m *DeviceChange) Marshal() (dAtA []byte, err error) {
+func (m *Change) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -290,69 +406,93 @@ func (m *DeviceChange) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DeviceChange) MarshalTo(dAtA []byte) (int, error) {
+func (m *Change) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *DeviceChange) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Change) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Change != nil {
-		{
-			size, err := m.Change.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
+	if len(m.Values) > 0 {
+		for iNdEx := len(m.Values) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Values[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintChange(dAtA, i, uint64(size))
 			}
-			i -= size
-			i = encodeVarintChange(dAtA, i, uint64(size))
+			i--
+			dAtA[i] = 0x5a
 		}
-		i--
-		dAtA[i] = 0x3a
 	}
-	if m.Updated != nil {
-		n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Updated, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Updated):])
-		if err2 != nil {
-			return 0, err2
-		}
-		i -= n2
-		i = encodeVarintChange(dAtA, i, uint64(n2))
-		i--
-		dAtA[i] = 0x32
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Updated, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Updated):])
+	if err1 != nil {
+		return 0, err1
 	}
-	if m.Created != nil {
-		n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Created, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Created):])
-		if err3 != nil {
-			return 0, err3
-		}
-		i -= n3
-		i = encodeVarintChange(dAtA, i, uint64(n3))
-		i--
-		dAtA[i] = 0x2a
+	i -= n1
+	i = encodeVarintChange(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x52
+	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.Created, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.Created):])
+	if err2 != nil {
+		return 0, err2
 	}
+	i -= n2
+	i = encodeVarintChange(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x4a
 	if len(m.Message) > 0 {
 		i -= len(m.Message)
 		copy(dAtA[i:], m.Message)
 		i = encodeVarintChange(dAtA, i, uint64(len(m.Message)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x42
+	}
+	if m.Reason != 0 {
+		i = encodeVarintChange(dAtA, i, uint64(m.Reason))
+		i--
+		dAtA[i] = 0x38
 	}
 	if m.Status != 0 {
 		i = encodeVarintChange(dAtA, i, uint64(m.Status))
 		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.DeviceVersion) > 0 {
+		i -= len(m.DeviceVersion)
+		copy(dAtA[i:], m.DeviceVersion)
+		i = encodeVarintChange(dAtA, i, uint64(len(m.DeviceVersion)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.DeviceID) > 0 {
+		i -= len(m.DeviceID)
+		copy(dAtA[i:], m.DeviceID)
+		i = encodeVarintChange(dAtA, i, uint64(len(m.DeviceID)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Revision != 0 {
+		i = encodeVarintChange(dAtA, i, uint64(m.Revision))
+		i--
 		dAtA[i] = 0x18
 	}
-	if m.ParentID != 0 {
-		i = encodeVarintChange(dAtA, i, uint64(m.ParentID))
+	if m.NetworkID != 0 {
+		i = encodeVarintChange(dAtA, i, uint64(m.NetworkID))
 		i--
 		dAtA[i] = 0x10
 	}
-	if m.ID != 0 {
-		i = encodeVarintChange(dAtA, i, uint64(m.ID))
+	if len(m.ID) > 0 {
+		i -= len(m.ID)
+		copy(dAtA[i:], m.ID)
+		i = encodeVarintChange(dAtA, i, uint64(len(m.ID)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -382,7 +522,12 @@ func (m *Value) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Value)
 		i = encodeVarintChange(dAtA, i, uint64(len(m.Value)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
+	}
+	if m.Type != 0 {
+		i = encodeVarintChange(dAtA, i, uint64(m.Type))
+		i--
+		dAtA[i] = 0x20
 	}
 	if len(m.Path) > 0 {
 		i -= len(m.Path)
@@ -390,20 +535,6 @@ func (m *Value) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintChange(dAtA, i, uint64(len(m.Path)))
 		i--
 		dAtA[i] = 0x1a
-	}
-	if len(m.DeviceVersion) > 0 {
-		i -= len(m.DeviceVersion)
-		copy(dAtA[i:], m.DeviceVersion)
-		i = encodeVarintChange(dAtA, i, uint64(len(m.DeviceVersion)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.DeviceID) > 0 {
-		i -= len(m.DeviceID)
-		copy(dAtA[i:], m.DeviceID)
-		i = encodeVarintChange(dAtA, i, uint64(len(m.DeviceID)))
-		i--
-		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -419,36 +550,49 @@ func encodeVarintChange(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *DeviceChange) Size() (n int) {
+func (m *Change) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.ID != 0 {
-		n += 1 + sovChange(uint64(m.ID))
+	l = len(m.ID)
+	if l > 0 {
+		n += 1 + l + sovChange(uint64(l))
 	}
-	if m.ParentID != 0 {
-		n += 1 + sovChange(uint64(m.ParentID))
+	if m.NetworkID != 0 {
+		n += 1 + sovChange(uint64(m.NetworkID))
+	}
+	if m.Revision != 0 {
+		n += 1 + sovChange(uint64(m.Revision))
+	}
+	l = len(m.DeviceID)
+	if l > 0 {
+		n += 1 + l + sovChange(uint64(l))
+	}
+	l = len(m.DeviceVersion)
+	if l > 0 {
+		n += 1 + l + sovChange(uint64(l))
 	}
 	if m.Status != 0 {
 		n += 1 + sovChange(uint64(m.Status))
+	}
+	if m.Reason != 0 {
+		n += 1 + sovChange(uint64(m.Reason))
 	}
 	l = len(m.Message)
 	if l > 0 {
 		n += 1 + l + sovChange(uint64(l))
 	}
-	if m.Created != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Created)
-		n += 1 + l + sovChange(uint64(l))
-	}
-	if m.Updated != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Updated)
-		n += 1 + l + sovChange(uint64(l))
-	}
-	if m.Change != nil {
-		l = m.Change.Size()
-		n += 1 + l + sovChange(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Created)
+	n += 1 + l + sovChange(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.Updated)
+	n += 1 + l + sovChange(uint64(l))
+	if len(m.Values) > 0 {
+		for _, e := range m.Values {
+			l = e.Size()
+			n += 1 + l + sovChange(uint64(l))
+		}
 	}
 	return n
 }
@@ -459,17 +603,12 @@ func (m *Value) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.DeviceID)
-	if l > 0 {
-		n += 1 + l + sovChange(uint64(l))
-	}
-	l = len(m.DeviceVersion)
-	if l > 0 {
-		n += 1 + l + sovChange(uint64(l))
-	}
 	l = len(m.Path)
 	if l > 0 {
 		n += 1 + l + sovChange(uint64(l))
+	}
+	if m.Type != 0 {
+		n += 1 + sovChange(uint64(m.Type))
 	}
 	l = len(m.Value)
 	if l > 0 {
@@ -484,7 +623,7 @@ func sovChange(x uint64) (n int) {
 func sozChange(x uint64) (n int) {
 	return sovChange(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *DeviceChange) Unmarshal(dAtA []byte) error {
+func (m *Change) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -507,17 +646,17 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DeviceChange: wiretype end group for non-group")
+			return fmt.Errorf("proto: Change: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DeviceChange: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Change: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.ID = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowChange
@@ -527,16 +666,29 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ID |= ID(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthChange
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthChange
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ID = ID(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ParentID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NetworkID", wireType)
 			}
-			m.ParentID = 0
+			m.NetworkID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowChange
@@ -546,12 +698,95 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ParentID |= ID(b&0x7F) << shift
+				m.NetworkID |= github_com_onosproject_onos_config_pkg_store_network.ID(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Revision", wireType)
+			}
+			m.Revision = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Revision |= Revision(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeviceID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthChange
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthChange
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeviceID = github_com_onosproject_onos_topo_pkg_northbound_device.ID(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeviceVersion", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthChange
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthChange
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeviceVersion = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
@@ -570,7 +805,26 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			m.Reason = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Reason |= Reason(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
 			}
@@ -602,7 +856,7 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 			}
 			m.Message = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Created", wireType)
 			}
@@ -631,14 +885,11 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Created == nil {
-				m.Created = new(time.Time)
-			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.Created, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Created, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Updated", wireType)
 			}
@@ -667,16 +918,13 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Updated == nil {
-				m.Updated = new(time.Time)
-			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.Updated, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.Updated, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 11:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Change", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -703,10 +951,8 @@ func (m *DeviceChange) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Change == nil {
-				m.Change = &Value{}
-			}
-			if err := m.Change.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Values = append(m.Values, &Value{})
+			if err := m.Values[len(m.Values)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -763,70 +1009,6 @@ func (m *Value) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Value: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DeviceID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChange
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthChange
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthChange
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DeviceID = github_com_onosproject_onos_topo_pkg_northbound_device.ID(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DeviceVersion", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowChange
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthChange
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthChange
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DeviceVersion = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Path", wireType)
@@ -860,6 +1042,25 @@ func (m *Value) Unmarshal(dAtA []byte) error {
 			m.Path = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowChange
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= Type(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
 			}

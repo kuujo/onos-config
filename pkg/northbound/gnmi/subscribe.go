@@ -62,7 +62,7 @@ func (s *Server) Subscribe(stream gnmi.GNMI_SubscribeServer) error {
 		return status.Error(codes.AlreadyExists, err.Error())
 	}
 	resChan := make(chan result)
-	//Handles each subscribe request coming into the server, blocks until a new request or an error comes in
+	//Handles each subscribe config coming into the server, blocks until a new config or an error comes in
 	go listenOnChannel(stream, mgr, hash, resChan, subscribe, changesChan, opStateChan)
 
 	res := <-resChan
@@ -113,10 +113,10 @@ func listenOnChannel(stream gnmi.GNMI_SubscribeServer, mgr *manager.Manager, has
 			mode = subscribe.Mode
 		}
 
-		//If there are no paths in the request such request is ignored
+		//If there are no paths in the config such config is ignored
 		//TODO evaluate throwing error
 		if subscribe.Subscription == nil {
-			log.Warning("No subscription paths, ignoring request ", in)
+			log.Warning("No subscription paths, ignoring config ", in)
 			continue
 		}
 
@@ -133,7 +133,7 @@ func listenOnChannel(stream gnmi.GNMI_SubscribeServer, mgr *manager.Manager, has
 				subsStr = append(subsStr, utils.MatchWildcardRegexp(subscriptionPathStr))
 				targets[sub.Path.Target] = struct{}{}
 			}
-			//Each subscription request spawns a go routing listening for related events for the target and the paths
+			//Each subscription config spawns a go routing listening for related events for the target and the paths
 			go listenForUpdates(changesChan, stream, mgr, targets, subsStr, resChan)
 			go listenForOpStateUpdates(opStateChan, stream, targets, subsStr, resChan)
 		}

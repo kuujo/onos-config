@@ -114,7 +114,7 @@ func Test_SubscribeLeafOnce(t *testing.T) {
 
 }
 
-// Test_SubscribeLeafDelete tests subscribing with mode STREAM and then issuing a set request with updates for that path
+// Test_SubscribeLeafDelete tests subscribing with mode STREAM and then issuing a set config with updates for that path
 func Test_SubscribeLeafStream(t *testing.T) {
 	server, mgr := setUp()
 
@@ -156,7 +156,7 @@ func Test_SubscribeLeafStream(t *testing.T) {
 		Replace: replacedPaths,
 		Update:  updatedPaths,
 	}
-	//Sending set request
+	//Sending set config
 	go func() {
 		_, err = server.Set(context.Background(), setRequest)
 		assert.NilError(t, err, "Unexpected error doing Set")
@@ -361,7 +361,7 @@ func Test_Poll(t *testing.T) {
 
 }
 
-// Test_SubscribeLeafDelete tests subscribing with mode STREAM and then issuing a set request with delete paths
+// Test_SubscribeLeafDelete tests subscribing with mode STREAM and then issuing a set config with delete paths
 func Test_SubscribeLeafStreamDelete(t *testing.T) {
 	server, mgr := setUp()
 
@@ -402,7 +402,7 @@ func Test_SubscribeLeafStreamDelete(t *testing.T) {
 		Replace: replacedPaths,
 		Update:  updatedPaths,
 	}
-	//Sending set request
+	//Sending set config
 	go func() {
 		_, err = server.Set(context.Background(), setRequest)
 		assert.NilError(t, err, "Unexpected error doing Set")

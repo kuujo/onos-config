@@ -24,10 +24,10 @@ import (
 )
 
 // GetTargetConfig returns a set of change values given a target, a configuration name, a path and a layer.
-// The layer is the numbers of config changes we want to go back in time for. 0 is the latest
+// The layer is the numbers of request changes we want to go back in time for. 0 is the latest
 func (m *Manager) GetTargetConfig(target string, configname store.ConfigName, path string, layer int) ([]*change.ConfigValue, error) {
-	log.Info("Getting config for ", target, path)
-	//TODO the key of the config store should be a tuple of (devicename, configname) use the param
+	log.Info("Getting request for ", target, path)
+	//TODO the key of the request store should be a tuple of (devicename, configname) use the param
 	var config store.Configuration
 	if target != "" {
 		for _, cfg := range m.ConfigStore.Store {

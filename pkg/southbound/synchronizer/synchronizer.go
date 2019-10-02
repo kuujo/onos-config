@@ -99,15 +99,15 @@ func New(context context.Context, changeStore *store.ChangeStore, configStore *s
 
 	config, err := getNetworkConfig(sync, string(sync.Device.ID), "", 0)
 
-	//Device does not have any stored config at the moment, skip initial set
+	//Device does not have any stored request at the moment, skip initial set
 	if err != nil {
 		log.Info(sync.Device.Address, " has no initial configuration")
 	} else {
-		//Device has initial configuration saved in onos-config, trying to apply
+		//Device has initial configuration saved in onos-request, trying to apply
 		initialConfig, err := change.NewChangeValuesNoRemoval(config, "Initial set to device")
 
 		if err != nil {
-			log.Errorf("Can't translate the initial config for %s due to: %s", sync.Device.Address, err)
+			log.Errorf("Can't translate the initial request for %s due to: %s", sync.Device.Address, err)
 			return sync, nil
 		}
 
@@ -129,7 +129,7 @@ func New(context context.Context, changeStore *store.ChangeStore, configStore *s
 			errChan <- events.NewErrorEvent(events.EventTypeErrorSetInitialConfig,
 				string(device.ID), initialConfig.ID, err)
 		} else {
-			log.Infof("Loaded initial config %s for device %s", store.B64(initialConfig.ID), sync.key.DeviceID)
+			log.Infof("Loaded initial request %s for device %s", store.B64(initialConfig.ID), sync.key.DeviceID)
 			errChan <- events.NewResponseEvent(events.EventTypeAchievedSetConfig,
 				sync.key.DeviceID, initialConfig.ID, resp.String())
 		}
@@ -217,7 +217,7 @@ func (sync Synchronizer) syncOperationalState(errChan chan<- events.DeviceRespon
 
 	//TODO do get for subscribePaths (the paths we get out of the model)
 	// This is because the previous 2 gets we have done might be empty or unimplemented
-	// There is a risk that the device might return everything (including config)
+	// There is a risk that the device might return everything (including request)
 	// If the device does not support wildcards GET of the whole tree and we need
 	// to take the burden of parsing it
 	//   so the following should be considered in the if statement:
@@ -353,7 +353,7 @@ func (sync Synchronizer) syncOperationalState(errChan chan<- events.DeviceRespon
 					}
 					configValues, err := jsonvalues.CorrectJSONPaths("", configValuesUnparsed, sync.modelReadOnlyPaths, true)
 					if err != nil {
-						log.Error("Can't translate from config values to typed values, skipping to next update: ", err)
+						log.Error("Can't translate from request values to typed values, skipping to next update: ", err)
 						errChan <- events.NewErrorEventNoChangeID(events.EventTypeErrorTranslation,
 							sync.key.DeviceID, err)
 						break
@@ -513,12 +513,12 @@ func (sync *Synchronizer) handler(msg proto.Message) error {
 
 				//TODO this is a hack for Stratum Sept 19
 				if strings.HasPrefix(pathStr, "/interfaces/interface[") && strings.HasSuffix(pathStr, "]/state/name") {
-					pathChange := strings.Replace(pathStr, "/state/", "/config/", 1)
-					log.Infof("Adding placeholder config node for %s as %s", pathStr, pathChange)
+					pathChange := strings.Replace(pathStr, "/state/", "/request/", 1)
+					log.Infof("Adding placeholder request node for %s as %s", pathStr, pathChange)
 					var newChanges = make([]*change.Value, 0)
 					changeValue, _ := change.NewChangeValue(pathChange, val, false)
 					newChanges = append(newChanges, changeValue)
-					chg, err := change.NewChange(newChanges, "Setting config name")
+					chg, err := change.NewChange(newChanges, "Setting request name")
 					if err != nil {
 						log.Error("Unable to add placeholder node due to: ", err)
 						continue
@@ -527,13 +527,13 @@ func (sync *Synchronizer) handler(msg proto.Message) error {
 					var newConfig *store.Configuration
 					for _, cfg := range sync.ConfigurationStore.Store {
 						if cfg.Device == sync.Target {
-							log.Infof("Tying placeholder config node to %s", sync.GetTarget())
+							log.Infof("Tying placeholder request node to %s", sync.GetTarget())
 							newConfig = &cfg
 							break
 						}
 					}
 					if newConfig == nil {
-						log.Infof("Creating new configuration for %s-%s to hold the placeholder config change %s",
+						log.Infof("Creating new configuration for %s-%s to hold the placeholder request change %s",
 							sync.GetTarget(), sync.GetVersion(), store.B64(chg.ID))
 						newConfig, _ = store.NewConfiguration(sync.GetTarget(), sync.GetVersion(), string(sync.GetType()), []change.ID{})
 					}
@@ -547,7 +547,7 @@ func (sync *Synchronizer) handler(msg proto.Message) error {
 							}
 						}
 						if !found {
-							log.Infof("Appending placeholder config change %s to config store", chID)
+							log.Infof("Appending placeholder request change %s to request store", chID)
 							newConfig.Changes = append(newConfig.Changes, chg.ID)
 							newConfig.Updated = time.Now()
 							sync.ConfigurationStore.Store[newConfig.Name] = *newConfig
@@ -573,8 +573,8 @@ func (sync *Synchronizer) handler(msg proto.Message) error {
 }
 
 func getNetworkConfig(sync *Synchronizer, target string, configname string, layer int) ([]*change.ConfigValue, error) {
-	log.Info("Getting saved config for ", target)
-	//TODO the key of the config store should be a tuple of (devicename, configname) use the param
+	log.Info("Getting saved request for ", target)
+	//TODO the key of the request store should be a tuple of (devicename, configname) use the param
 	var config store.Configuration
 	if target != "" {
 		for _, cfg := range sync.ConfigurationStore.Store {

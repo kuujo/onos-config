@@ -60,7 +60,7 @@ func testGetChanges(t *testing.T, changeID string) {
 	}
 
 	stream, err := client.GetChanges(context.Background(), changesReq)
-	assert.NilError(t, err, "unable to issue request")
+	assert.NilError(t, err, "unable to issue config")
 	var id = ""
 	for {
 		in, err := stream.Recv()
@@ -92,7 +92,7 @@ func testGetConfigurations(t *testing.T, deviceID string) {
 		configReq.DeviceIDs = append(configReq.DeviceIDs, deviceID)
 	}
 	stream, err := client.GetConfigurations(context.Background(), configReq)
-	assert.NilError(t, err, "unable to issue request")
+	assert.NilError(t, err, "unable to issue config")
 	var name = ""
 	for {
 		in, err := stream.Recv()
@@ -114,7 +114,7 @@ func Test_GetOpState_DeviceSubscribe(t *testing.T) {
 	opStateReq := &OpStateRequest{DeviceId: "Device2", Subscribe: true}
 
 	stream, err := client.GetOpState(context.Background(), opStateReq)
-	assert.NilError(t, err, "unable to issue request")
+	assert.NilError(t, err, "unable to issue config")
 	var pv *admin.ChangeValue
 	for {
 		in, err := stream.Recv()

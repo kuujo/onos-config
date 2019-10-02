@@ -42,7 +42,7 @@ type mapNetworkChanges map[store.ConfigName]change.ID
 
 // Set implements gNMI Set
 func (s *Server) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetResponse, error) {
-	// There is only one set of extensions in Set request, regardless of number of
+	// There is only one set of extensions in Set config, regardless of number of
 	// updates
 	var (
 		netcfgchangename string // May be specified as 100 in extension

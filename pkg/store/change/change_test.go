@@ -144,7 +144,7 @@ func Test_badpath(t *testing.T) {
 
 	assert.Error(t, err1, badpath, "Expected error on ", badpath)
 
-	assert.Assert(t, conf1 == nil, "Expected config to be empty on error")
+	assert.Assert(t, conf1 == nil, "Expected request to be empty on error")
 
 	badpath = "//two/contiguous/slashes"
 	_, err2 := NewChangeValue(badpath, NewTypedValueString("123"), false)

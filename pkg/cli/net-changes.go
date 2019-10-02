@@ -42,7 +42,7 @@ func runNetChangesCommand(cmd *cobra.Command, args []string) error {
 
 	stream, err := client.GetNetworkChanges(context.Background(), &admin.NetworkChangesRequest{})
 	if err != nil {
-		return fmt.Errorf("Failed to send request: %v", err)
+		return fmt.Errorf("Failed to send config: %v", err)
 	}
 
 	for {

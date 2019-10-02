@@ -75,7 +75,7 @@ func (s *Server) Get(ctx context.Context, req *gnmi.GetRequest) (*gnmi.GetRespon
 // getUpdate utility method for getting an Update for a given path
 func getUpdate(prefix *gnmi.Path, path *gnmi.Path) (*gnmi.Update, error) {
 	if (path == nil || path.Target == "") && (prefix == nil || prefix.Target == "") {
-		return nil, fmt.Errorf("Invalid request - Path %s has no target", utils.StrPath(path))
+		return nil, fmt.Errorf("Invalid config - Path %s has no target", utils.StrPath(path))
 	}
 
 	// If a target exists on the path, use it. If not use target of Prefix

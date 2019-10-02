@@ -44,7 +44,7 @@ func Test_GetNetworkChanges(t *testing.T) {
 	conn, client := getAdminClient()
 	defer conn.Close()
 	stream, err := client.GetNetworkChanges(context.Background(), &NetworkChangesRequest{})
-	assert.NilError(t, err, "unable to issue request")
+	assert.NilError(t, err, "unable to issue config")
 	var name string
 	for {
 		in, err := stream.Recv()

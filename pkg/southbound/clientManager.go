@@ -92,7 +92,7 @@ func GetTarget(key DeviceID) (*Target, error) {
 
 // ConnectTarget connects to a given Device according to the passed information establishing a channel to it.
 //TODO make asyc
-//TODO lock channel to allow one request to device at each time
+//TODO lock channel to allow one config to device at each time
 func (target *Target) ConnectTarget(ctx context.Context, device devicepb.Device) (DeviceID, error) {
 	dest, key := createDestination(device)
 	c, err := GnmiClientFactory(ctx, *dest)
@@ -136,7 +136,7 @@ func getCertPoolDefault() *x509.CertPool {
 	return certPool
 }
 
-// CapabilitiesWithString allows a request for the capabilities by a string - can be empty
+// CapabilitiesWithString allows a config for the capabilities by a string - can be empty
 func (target *Target) CapabilitiesWithString(ctx context.Context, request string) (*gpb.CapabilityResponse, error) {
 	r := &gpb.CapabilityRequest{}
 	reqProto := &request
@@ -146,7 +146,7 @@ func (target *Target) CapabilitiesWithString(ctx context.Context, request string
 	return target.Capabilities(ctx, r)
 }
 
-// Capabilities get capabilities according to a formatted request
+// Capabilities get capabilities according to a formatted config
 func (target *Target) Capabilities(ctx context.Context, request *gpb.CapabilityRequest) (*gpb.CapabilityResponse, error) {
 	response, err := target.Clt.Capabilities(ctx, request)
 	if err != nil {
@@ -155,10 +155,10 @@ func (target *Target) Capabilities(ctx context.Context, request *gpb.CapabilityR
 	return response, nil
 }
 
-// GetWithString can make a get request according by a string - can be empty
+// GetWithString can make a get config according by a string - can be empty
 func (target *Target) GetWithString(ctx context.Context, request string) (*gpb.GetResponse, error) {
 	if request == "" {
-		return nil, errors.New("cannot get and empty request")
+		return nil, errors.New("cannot get and empty config")
 	}
 	r := &gpb.GetRequest{}
 	reqProto := &request
@@ -168,7 +168,7 @@ func (target *Target) GetWithString(ctx context.Context, request string) (*gpb.G
 	return target.Get(ctx, r)
 }
 
-// Get can make a get request according to a formatted request
+// Get can make a get config according to a formatted config
 func (target *Target) Get(ctx context.Context, request *gpb.GetRequest) (*gpb.GetResponse, error) {
 	response, err := target.Clt.Get(ctx, request)
 	if err != nil {
@@ -177,11 +177,11 @@ func (target *Target) Get(ctx context.Context, request *gpb.GetRequest) (*gpb.Ge
 	return response, nil
 }
 
-// SetWithString can make a set request according by a string
+// SetWithString can make a set config according by a string
 func (target *Target) SetWithString(ctx context.Context, request string) (*gpb.SetResponse, error) {
 	//TODO modify with key that gets target from map
 	if request == "" {
-		return nil, errors.New("cannot get and empty request")
+		return nil, errors.New("cannot get and empty config")
 	}
 	r := &gpb.SetRequest{}
 	reqProto := &request
@@ -191,7 +191,7 @@ func (target *Target) SetWithString(ctx context.Context, request string) (*gpb.S
 	return target.Set(ctx, r)
 }
 
-// Set can make a set request according to a formatted request
+// Set can make a set config according to a formatted config
 func (target *Target) Set(ctx context.Context, request *gpb.SetRequest) (*gpb.SetResponse, error) {
 	response, err := target.Clt.Set(ctx, request)
 	if err != nil {
@@ -202,9 +202,9 @@ func (target *Target) Set(ctx context.Context, request *gpb.SetRequest) (*gpb.Se
 
 // Subscribe initiates a subscription to a target and set of paths by establishing a new channel
 func (target *Target) Subscribe(ctx context.Context, request *gpb.SubscribeRequest, handler client.ProtoHandler) error {
-	//TODO currently establishing a throwaway client per each subscription request
+	//TODO currently establishing a throwaway client per each subscription config
 	//this is due to the face that 1 NotificationHandler is allowed per client (1:1)
-	//alternatively we could handle every connection request with one NotificationHandler
+	//alternatively we could handle every connection config with one NotificationHandler
 	//returing to the caller only the desired results.
 	q, err := client.NewQuery(request)
 	if err != nil {

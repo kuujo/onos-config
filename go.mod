@@ -3,6 +3,7 @@ module github.com/onosproject/onos-config
 go 1.12
 
 require (
+	github.com/atomix/atomix-go-client v0.0.0-20191001012108-1d9dde17306b // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/docker/docker v1.13.1
 	github.com/gogo/protobuf v1.2.2-0.20190723190241-65acae22fc9d
@@ -15,7 +16,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
-	google.golang.org/grpc v1.22.1
+	google.golang.org/grpc v1.23.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/klog v0.3.3
 )
