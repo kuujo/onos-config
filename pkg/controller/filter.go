@@ -13,12 +13,12 @@ type Filter interface {
 
 // MastershipFilter activates a controller on acquiring mastership
 type MastershipFilter struct {
-	mastership mastershipstore.Store
+	Store mastershipstore.Store
 }
 
 // Accept accepts the given ID if the local node is the master
 func (f *MastershipFilter) Accept(id interface{}) bool {
-	master, err := f.mastership.IsMaster(id.(device.ID))
+	master, err := f.Store.IsMaster(id.(device.ID))
 	if err != nil {
 		return false
 	}

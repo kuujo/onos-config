@@ -32,9 +32,9 @@ var _ Activator = &AlwaysActivator{}
 
 // LeadershipActivator is an Activator for activating a controller on leadership
 type LeadershipActivator struct {
-	leadership leadershipstore.Store
-	ch         chan leadershipstore.Leadership
-	mu         sync.Mutex
+	Store leadershipstore.Store
+	ch    chan leadershipstore.Leadership
+	mu    sync.Mutex
 }
 
 func (a *LeadershipActivator) Start(ch chan<- bool) error {
@@ -42,7 +42,7 @@ func (a *LeadershipActivator) Start(ch chan<- bool) error {
 	a.ch = make(chan leadershipstore.Leadership)
 	a.mu.Unlock()
 
-	if err := a.leadership.Watch(a.ch); err != nil {
+	if err := a.Store.Watch(a.ch); err != nil {
 		return err
 	}
 

@@ -4,12 +4,16 @@ import (
 	"github.com/onosproject/onos-config/pkg/controller"
 	"github.com/onosproject/onos-config/pkg/controller/change"
 	changestore "github.com/onosproject/onos-config/pkg/store/change"
+	leadershipstore "github.com/onosproject/onos-config/pkg/store/leadership"
 	networkstore "github.com/onosproject/onos-config/pkg/store/network"
 )
 
 // NewController returns a new network controller
-func NewController(networks networkstore.Store, changes changestore.Store) *controller.Controller {
+func NewController(leadership leadershipstore.Store, networks networkstore.Store, changes changestore.Store) *controller.Controller {
 	c := controller.NewController()
+	c.Activate(&controller.LeadershipActivator{
+		Store: leadership,
+	})
 	c.Watch(&Watcher{
 		Store: networks,
 	})

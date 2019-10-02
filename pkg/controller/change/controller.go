@@ -3,11 +3,15 @@ package change
 import (
 	"github.com/onosproject/onos-config/pkg/controller"
 	changestore "github.com/onosproject/onos-config/pkg/store/change"
+	mastershipstore "github.com/onosproject/onos-config/pkg/store/mastership"
 )
 
 // NewController returns a new network controller
-func NewController(changes changestore.Store) *controller.Controller {
+func NewController(mastership mastershipstore.Store, changes changestore.Store) *controller.Controller {
 	c := controller.NewController()
+	c.Filter(&controller.MastershipFilter{
+		Store: mastership,
+	})
 	c.Watch(&Watcher{
 		Store: changes,
 	})

@@ -3,14 +3,18 @@ package request
 import (
 	"github.com/onosproject/onos-config/pkg/controller"
 	"github.com/onosproject/onos-config/pkg/controller/network"
+	leadershipstore "github.com/onosproject/onos-config/pkg/store/leadership"
 	networkstore "github.com/onosproject/onos-config/pkg/store/network"
 	requeststore "github.com/onosproject/onos-config/pkg/store/request"
 	"github.com/onosproject/onos-topo/pkg/northbound/device"
 )
 
 // NewController returns a new network controller
-func NewController(requests requeststore.Store, networks networkstore.Store) *controller.Controller {
+func NewController(leadership leadershipstore.Store, requests requeststore.Store, networks networkstore.Store) *controller.Controller {
 	c := controller.NewController()
+	c.Activate(&controller.LeadershipActivator{
+		Store: leadership,
+	})
 	c.Watch(&Watcher{
 		Store: requests,
 	})
