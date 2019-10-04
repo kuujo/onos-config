@@ -1,0 +1,116 @@
+/*
+Copyright 2019-present Open Networking Foundation.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+syntax = "proto3";
+
+package onos.config.device.snapshot;
+
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+import "github.com/onosproject/onos-config/pkg/types/device/change/types.proto";
+
+// Status is the status of a snapshot object
+enum Status {
+    // PENDING indicates the snapshot is waiting to be applied
+    PENDING = 0;
+
+    // APPLYING indicates the snapshot is being applied
+    APPLYING = 1;
+
+    // SUCCEEDED indicates the snapshot was applied successfully
+    SUCCEEDED = 2;
+
+    // FAILED indicates the snapshot failed
+    FAILED = 3;
+}
+
+// Reason is a failure reason
+enum Reason {
+    // ERROR indicates an error occurred during snapshot
+    ERROR = 0;
+}
+
+// DeviceSnapshot is a device snapshot request
+// The DeviceSnapshot maintains the status of the snapshot request but does not store the snapshot
+// state itself. During the snapshot process, the DeviceSnapshot will be updated with status
+// information indicating when the snapshot is in progress and whether it succeeds or fails.
+message DeviceSnapshot {
+    // 'id' is the snapshot request identifier
+    string id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
+
+    // 'device_id' is the device to which the snapshot applies
+    string device_id = 2 [(gogoproto.customname) = "DeviceID", (gogoproto.casttype) = "github.com/onosproject/onos-topo/pkg/northbound/device.ID"];
+
+    // 'revision' is the request revision number
+    // Each time the snapshot state is updated, a new revision number will be assigned. The revision
+    // is guaranteed to be unique and monotonically increasing and is thus suitable for optimistic
+    // concurrency control.
+    uint64 revision = 3 [(gogoproto.casttype) = "Revision"];
+
+    // 'status' is the current status of the snapshot request
+    // The snapshot will be initialized with the 'PENDING' status and will progress through the 'APPLYING'
+    // status and ultimately marked 'SUCCEEDED' or 'FAILED' once the snapshot is complete. If the snapshot
+    // fails, a 'reason' and optional 'message' will be provided.
+    Status status = 4;
+
+    // 'reason' is the snapshot failure reason
+    // The 'reason' field will be set to 'ERROR' by default and is invalid unless the 'status' is 'FAILED'.
+    Reason reason = 5;
+
+    // 'message' is an optional status message
+    // The message will be empty unless the snapshot is failed with a 'FAILED' status, in which case the
+    // 'message' field may be used to provide a failure message.
+    string message = 6;
+
+    // 'timestamp' is the wall clock time at which to take the snapshot
+    // The timestamp will dictate how much of the history is retained following the snapshot. Device changes
+    // created after the configured timestamp will be preserved, while changes created prior to the snapshot
+    // timestamp will be aggregated into a single Snapshot and the individual changes will be deleted.
+    google.protobuf.Timestamp timestamp = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+
+    // 'created' is the time at which the configuration was created
+    google.protobuf.Timestamp created = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+
+    // 'updated' is the time at which the configuration was last updated
+    google.protobuf.Timestamp updated = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+// Snapshot is the state of a device snapshot
+// A single snapshot stores the aggregate of state changes applied to a device.
+message Snapshot {
+    // 'id' is the unique snapshot identifier
+    string id = 1 [(gogoproto.customname) = "ID", (gogoproto.casttype) = "ID"];
+
+    // 'device_id' is the device to which the snapshot applies
+    string device_id = 2 [(gogoproto.customname) = "DeviceID", (gogoproto.casttype) = "github.com/onosproject/onos-topo/pkg/northbound/device.ID"];
+
+    // 'device_version' is the version of the device
+    string device_version = 3;
+
+    // 'snapshot_id' is the ID of the snapshot request
+    string snapshot_id = 4 [(gogoproto.customname) = "SnapshotID", (gogoproto.casttype) = "ID"];
+
+    // 'index' is the index at which the snapshot was taken
+    uint64 index = 5 [(gogoproto.casttype) = "Index"];
+
+    // 'values' is a list of values that were snapshotted
+    // The values are the state of the snapshot and represent an aggregation of all changes applied to the
+    // device up to the configured 'index'.
+    repeated onos.config.device.change.Value values = 6;
+
+    // 'timestamp' is the wall clock time at which the snapshot was taken
+    google.protobuf.Timestamp timestamp = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
