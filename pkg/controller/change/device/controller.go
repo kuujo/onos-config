@@ -71,16 +71,16 @@ type Reconciler struct {
 }
 
 // Reconcile reconciles the state of a device change
-func (r *Reconciler) Reconcile(id types.ID) (bool, error) {
+func (r *Reconciler) Reconcile(id types.ID) (controller.Result, error) {
 	// Get the change from the store
 	change, err := r.changes.Get(devicechange.ID(id))
 	if err != nil {
-		return false, err
+		return controller.Result{}, err
 	}
 
 	// The device controller only needs to handle changes in the RUNNING state
 	if change == nil || change.Status.State != changetypes.State_RUNNING {
-		return true, nil
+		return controller.Result{}, nil
 	}
 
 	// Get the device from the device store
@@ -96,9 +96,9 @@ func (r *Reconciler) Reconcile(id types.ID) (bool, error) {
 		change.Status.Message = fmt.Sprintf("Device %s not connected %v", change.Change.DeviceID, getProtocolState(device))
 		log.Infof("Failing DeviceChange %v", change)
 		if err := r.changes.Update(change); err != nil {
-			return false, err
+			return controller.Result{}, err
 		}
-		return true, nil
+		return controller.Result{}, nil
 	}
 
 	// Handle the change for each phase
@@ -108,11 +108,11 @@ func (r *Reconciler) Reconcile(id types.ID) (bool, error) {
 	case changetypes.Phase_ROLLBACK:
 		return r.reconcileRollback(change)
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // reconcileChange reconciles a CHANGE in the RUNNING state
-func (r *Reconciler) reconcileChange(change *devicechange.DeviceChange, inTopo bool) (bool, error) {
+func (r *Reconciler) reconcileChange(change *devicechange.DeviceChange, inTopo bool) (controller.Result, error) {
 	// Attempt to apply the change to the device and update the change with the result
 	var err error = nil
 	if inTopo {
@@ -130,9 +130,9 @@ func (r *Reconciler) reconcileChange(change *devicechange.DeviceChange, inTopo b
 
 	// Update the change status in the store
 	if err := r.changes.Update(change); err != nil {
-		return false, err
+		return controller.Result{}, err
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // doChange pushes the given change to the device
@@ -142,7 +142,7 @@ func (r *Reconciler) doChange(change *devicechange.DeviceChange) error {
 }
 
 // reconcileRollback reconciles a ROLLBACK in the RUNNING state
-func (r *Reconciler) reconcileRollback(change *devicechange.DeviceChange) (bool, error) {
+func (r *Reconciler) reconcileRollback(change *devicechange.DeviceChange) (controller.Result, error) {
 	// Attempt to roll back the change to the device and update the change with the result
 	if err := r.doRollback(change); err != nil {
 		change.Status.State = changetypes.State_FAILED
@@ -156,9 +156,9 @@ func (r *Reconciler) reconcileRollback(change *devicechange.DeviceChange) (bool,
 
 	// Update the change status in the store
 	if err := r.changes.Update(change); err != nil {
-		return false, err
+		return controller.Result{}, err
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // doRollback rolls back a change on the device

@@ -61,11 +61,11 @@ type Reconciler struct {
 }
 
 // Reconcile reconciles the state of a network configuration
-func (r *Reconciler) Reconcile(id types.ID) (bool, error) {
+func (r *Reconciler) Reconcile(id types.ID) (controller.Result, error) {
 	change, err := r.networkChanges.Get(networkchange.ID(id))
 	if err != nil {
 		log.Warnf("Could not get NetworkChange %s", id)
-		return false, err
+		return controller.Result{}, err
 	}
 
 	// Handle the change for each phase
@@ -77,24 +77,26 @@ func (r *Reconciler) Reconcile(id types.ID) (bool, error) {
 			return r.reconcileRollback(change)
 		}
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // reconcileChange reconciles a change in the CHANGE phase
-func (r *Reconciler) reconcileChange(change *networkchange.NetworkChange) (bool, error) {
+func (r *Reconciler) reconcileChange(change *networkchange.NetworkChange) (controller.Result, error) {
 	// Handle each possible state of the phase
 	switch change.Status.State {
 	case changetypes.State_PENDING:
 		return r.reconcilePendingChange(change)
 	case changetypes.State_RUNNING:
 		return r.reconcileRunningChange(change)
+	case changetypes.State_COMPLETE:
+		return r.reconcileCompleteChange(change)
 	default:
-		return true, nil
+		return controller.Result{}, nil
 	}
 }
 
 // reconcilePendingChange reconciles a change in the PENDING state during the CHANGE phase
-func (r *Reconciler) reconcilePendingChange(change *networkchange.NetworkChange) (bool, error) {
+func (r *Reconciler) reconcilePendingChange(change *networkchange.NetworkChange) (controller.Result, error) {
 	// Create device changes if the prior change has been propagated
 	if !hasDeviceChanges(change) {
 		return r.createDeviceChanges(change)
@@ -103,9 +105,9 @@ func (r *Reconciler) reconcilePendingChange(change *networkchange.NetworkChange)
 	// Determine whether the change can be applied
 	canApply, err := r.canApplyChange(change)
 	if err != nil {
-		return false, err
+		return controller.Result{}, err
 	} else if !canApply {
-		return false, nil
+		return controller.Result{}, nil
 	}
 
 	// If the change can be applied, update the change state to RUNNING
@@ -115,9 +117,9 @@ func (r *Reconciler) reconcilePendingChange(change *networkchange.NetworkChange)
 	change.Status.Message = ""
 	log.Infof("Running NetworkChange %v", change)
 	if err := r.networkChanges.Update(change); err != nil {
-		return false, err
+		return controller.Result{}, err
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // hasDeviceChanges indicates whether the given change has created device changes
@@ -126,13 +128,13 @@ func hasDeviceChanges(change *networkchange.NetworkChange) bool {
 }
 
 // createDeviceChanges creates device changes in sequential order
-func (r *Reconciler) createDeviceChanges(networkChange *networkchange.NetworkChange) (bool, error) {
+func (r *Reconciler) createDeviceChanges(networkChange *networkchange.NetworkChange) (controller.Result, error) {
 	// If the previous network change has not created device changes, requeue to wait for changes to be propagated
 	prevChange, err := r.networkChanges.GetByIndex(networkChange.Index - 1)
 	if err != nil {
-		return false, err
+		return controller.Result{}, err
 	} else if prevChange != nil && !hasDeviceChanges(prevChange) {
-		return false, nil
+		return controller.Result{Requeue: types.ID(networkChange.ID)}, nil
 	}
 
 	// Loop through changes and create device changes
@@ -147,7 +149,7 @@ func (r *Reconciler) createDeviceChanges(networkChange *networkchange.NetworkCha
 		}
 		log.Infof("Creating DeviceChange %v for %v", deviceChange, networkChange.ID)
 		if err := r.deviceChanges.Create(deviceChange); err != nil {
-			return false, err
+			return controller.Result{}, err
 		}
 		refs[i] = &networkchange.DeviceChangeRef{
 			DeviceChangeID: deviceChange.ID,
@@ -157,9 +159,9 @@ func (r *Reconciler) createDeviceChanges(networkChange *networkchange.NetworkCha
 	// If references have been updated, store the refs and succeed the reconciliation
 	networkChange.Refs = refs
 	if err := r.networkChanges.Update(networkChange); err != nil {
-		return false, err
+		return controller.Result{}, err
 	}
-	return true, nil
+	return controller.Result{Requeue: types.ID(networkChange.ID)}, nil
 }
 
 // canApplyChange returns a bool indicating whether the change can be applied
@@ -207,17 +209,17 @@ func (r *Reconciler) canApplyChange(change *networkchange.NetworkChange) (bool, 
 }
 
 // reconcileRunningChange reconciles a change in the RUNNING state during the CHANGE phase
-func (r *Reconciler) reconcileRunningChange(change *networkchange.NetworkChange) (bool, error) {
+func (r *Reconciler) reconcileRunningChange(change *networkchange.NetworkChange) (controller.Result, error) {
 	// Get the current state of all device changes for the change
 	deviceChanges, err := r.getDeviceChanges(change)
 	if err != nil {
-		return false, err
+		return controller.Result{}, err
 	}
 
 	// Ensure the device changes are being applied
 	succeeded, err := r.ensureDeviceChangesRunning(change, deviceChanges)
 	if succeeded || err != nil {
-		return succeeded, err
+		return controller.Result{}, err
 	}
 
 	// If all device changes are complete, mark the network change complete
@@ -225,9 +227,9 @@ func (r *Reconciler) reconcileRunningChange(change *networkchange.NetworkChange)
 		change.Status.State = changetypes.State_COMPLETE
 		log.Infof("Completing NetworkChange %v", change)
 		if err := r.networkChanges.Update(change); err != nil {
-			return false, err
+			return controller.Result{}, err
 		}
-		return true, nil
+		return controller.Result{}, nil
 	}
 
 	// If a device change failed, rollback pending changes and requeue the change
@@ -235,7 +237,7 @@ func (r *Reconciler) reconcileRunningChange(change *networkchange.NetworkChange)
 		// Ensure changes that have not failed are being rolled back
 		succeeded, err = r.ensureDeviceChangeRollbacksRunning(deviceChanges)
 		if succeeded || err != nil {
-			return succeeded, err
+			return controller.Result{}, err
 		}
 
 		// If all device change rollbacks have completed, revert the network change to PENDING
@@ -245,11 +247,11 @@ func (r *Reconciler) reconcileRunningChange(change *networkchange.NetworkChange)
 			change.Status.Message = "At least one device failed"
 			log.Infof("Failing NetworkChange %v", change)
 			if err := r.networkChanges.Update(change); err != nil {
-				return false, err
+				return controller.Result{}, err
 			}
 		}
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // ensureDeviceChangesRunning ensures device changes are in the running state
@@ -268,6 +270,29 @@ func (r *Reconciler) ensureDeviceChangesRunning(networkChange *networkchange.Net
 		}
 	}
 	return updated, nil
+}
+
+// reconcileCompleteChange reconciles a change in the COMPLETE state during the CHANGE phase
+func (r *Reconciler) reconcileCompleteChange(change *networkchange.NetworkChange) (controller.Result, error) {
+	nextChange, err := r.networkChanges.GetNext(change.Index)
+	if err != nil {
+		return controller.Result{}, err
+	}
+
+	for nextChange != nil {
+		if isIntersectingChange(change, nextChange) {
+			if nextChange.Status.State == changetypes.State_PENDING {
+				return controller.Result{Requeue: types.ID(nextChange.ID)}, nil
+			}
+			return controller.Result{}, nil
+		}
+
+		nextChange, err = r.networkChanges.GetNext(nextChange.Index)
+		if err != nil {
+			return controller.Result{}, err
+		}
+	}
+	return controller.Result{}, nil
 }
 
 // getDeviceChanges gets the device changes for the given network change
@@ -331,11 +356,11 @@ func (r *Reconciler) isDeviceChangeRollbacksComplete(changes []*devicechange.Dev
 }
 
 // reconcileRollback reconciles a change in the ROLLBACK phase
-func (r *Reconciler) reconcileRollback(change *networkchange.NetworkChange) (bool, error) {
+func (r *Reconciler) reconcileRollback(change *networkchange.NetworkChange) (controller.Result, error) {
 	// Ensure the device changes are in the ROLLBACK phase
 	updated, err := r.ensureDeviceRollbacks(change)
 	if updated || err != nil {
-		return updated, err
+		return controller.Result{}, err
 	}
 
 	// Handle each possible state of the phase
@@ -345,7 +370,7 @@ func (r *Reconciler) reconcileRollback(change *networkchange.NetworkChange) (boo
 	case changetypes.State_RUNNING:
 		return r.reconcileRunningRollback(change)
 	default:
-		return true, nil
+		return controller.Result{}, nil
 	}
 }
 
@@ -373,22 +398,22 @@ func (r *Reconciler) ensureDeviceRollbacks(networkChange *networkchange.NetworkC
 }
 
 // reconcilePendingRollback reconciles a change in the PENDING state during the ROLLBACK phase
-func (r *Reconciler) reconcilePendingRollback(change *networkchange.NetworkChange) (bool, error) {
+func (r *Reconciler) reconcilePendingRollback(change *networkchange.NetworkChange) (controller.Result, error) {
 	// Determine whether the rollback can be applied
 	canApply, err := r.canApplyRollback(change)
 	if err != nil {
-		return false, err
+		return controller.Result{}, err
 	} else if !canApply {
-		return false, nil
+		return controller.Result{}, nil
 	}
 
 	// If the rollback can be applied, update the change state to RUNNING
 	change.Status.State = changetypes.State_RUNNING
 	log.Infof("Running NetworkChange %v", change)
 	if err := r.networkChanges.Update(change); err != nil {
-		return false, err
+		return controller.Result{}, err
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // canApplyRollback returns a bool indicating whether the rollback can be applied
@@ -414,27 +439,27 @@ func (r *Reconciler) canApplyRollback(networkChange *networkchange.NetworkChange
 }
 
 // reconcileRunningRollback reconciles a change in the RUNNING state during the ROLLBACK phase
-func (r *Reconciler) reconcileRunningRollback(change *networkchange.NetworkChange) (bool, error) {
+func (r *Reconciler) reconcileRunningRollback(change *networkchange.NetworkChange) (controller.Result, error) {
 	// Ensure the device rollbacks are running
 	succeeded, err := r.ensureDeviceRollbacksRunning(change)
 	if succeeded || err != nil {
-		return succeeded, err
+		return controller.Result{}, err
 	}
 
 	// If the rollback is complete, update the change state. Otherwise discard the change.
 	complete, err := r.isRollbackComplete(change)
 	if err != nil {
-		return false, err
+		return controller.Result{}, err
 	} else if !complete {
-		return true, nil
+		return controller.Result{}, nil
 	}
 
 	change.Status.State = changetypes.State_COMPLETE
 	log.Infof("Completing NetworkChange %v", change)
 	if err := r.networkChanges.Update(change); err != nil {
-		return false, nil
+		return controller.Result{}, err
 	}
-	return true, nil
+	return controller.Result{}, nil
 }
 
 // ensureDeviceRollbacksRunning ensures device rollbacks are in the running state
