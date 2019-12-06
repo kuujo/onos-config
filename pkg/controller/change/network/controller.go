@@ -42,6 +42,7 @@ func NewController(leadership leadershipstore.Store, deviceCache cache.Cache, de
 	})
 	c.Watch(&DeviceWatcher{
 		DeviceCache: deviceCache,
+		DeviceStore: devices,
 		ChangeStore: deviceChanges,
 	})
 	c.Reconcile(&Reconciler{
@@ -63,7 +64,7 @@ type Reconciler struct {
 func (r *Reconciler) Reconcile(id types.ID) (bool, error) {
 	change, err := r.networkChanges.Get(networkchange.ID(id))
 	if err != nil {
-		log.Warnf("Could not get NW change %s", id)
+		log.Warnf("Could not get NetworkChange %s", id)
 		return false, err
 	}
 
@@ -171,6 +172,7 @@ func (r *Reconciler) canApplyChange(change *networkchange.NetworkChange) (bool, 
 		}
 		state := getProtocolState(device)
 		if state != devicetopo.ChannelState_CONNECTED {
+			log.Infof("Cannot apply NetworkChange %v: %v is offline", change.ID, deviceChange.DeviceID)
 			return false, nil
 		}
 	}
