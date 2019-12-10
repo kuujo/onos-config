@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	cluster "github.com/onosproject/onos-config/pkg/store/cluster"
 	mastership "github.com/onosproject/onos-config/pkg/store/mastership"
+	stream "github.com/onosproject/onos-config/pkg/store/stream"
 	device "github.com/onosproject/onos-topo/api/device"
 	reflect "reflect"
 )
@@ -18,7 +19,7 @@ type MockMastershipStore struct {
 	recorder *MockMastershipStoreMockRecorder
 }
 
-// MockMastershipStoreMockRecorder is the mock recorder for MockStore
+// MockMastershipStoreMockRecorder is the mock recorder for MockMastershipStore
 type MockMastershipStoreMockRecorder struct {
 	mock *MockMastershipStore
 }
@@ -63,6 +64,36 @@ func (mr *MockMastershipStoreMockRecorder) NodeID() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeID", reflect.TypeOf((*MockMastershipStore)(nil).NodeID))
 }
 
+// Join mocks base method
+func (m *MockMastershipStore) Join(id device.ID) (mastership.Mastership, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Join", id)
+	ret0, _ := ret[0].(mastership.Mastership)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Join indicates an expected call of Join
+func (mr *MockMastershipStoreMockRecorder) Join(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Join", reflect.TypeOf((*MockMastershipStore)(nil).Join), id)
+}
+
+// Leave mocks base method
+func (m *MockMastershipStore) Leave(id device.ID) (mastership.Mastership, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Leave", id)
+	ret0, _ := ret[0].(mastership.Mastership)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Leave indicates an expected call of Leave
+func (mr *MockMastershipStoreMockRecorder) Leave(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Leave", reflect.TypeOf((*MockMastershipStore)(nil).Leave), id)
+}
+
 // IsMaster mocks base method
 func (m *MockMastershipStore) IsMaster(id device.ID) (bool, error) {
 	m.ctrl.T.Helper()
@@ -79,11 +110,12 @@ func (mr *MockMastershipStoreMockRecorder) IsMaster(id interface{}) *gomock.Call
 }
 
 // Watch mocks base method
-func (m *MockMastershipStore) Watch(arg0 device.ID, arg1 chan<- mastership.Mastership) error {
+func (m *MockMastershipStore) Watch(arg0 device.ID, arg1 chan<- stream.Event) (stream.Context, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Watch", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(stream.Context)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Watch indicates an expected call of Watch

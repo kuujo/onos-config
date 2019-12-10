@@ -16,17 +16,16 @@ package mastership
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/atomix/atomix-go-client/pkg/client"
 	"github.com/atomix/atomix-go-client/pkg/client/election"
 	"github.com/atomix/atomix-go-client/pkg/client/primitive"
 	"github.com/atomix/atomix-go-client/pkg/client/session"
 	"github.com/onosproject/onos-config/pkg/store/cluster"
+	"github.com/onosproject/onos-config/pkg/store/stream"
 	topodevice "github.com/onosproject/onos-topo/api/device"
 	"google.golang.org/grpc"
 	"io"
-	"sync"
 	"time"
 )
 
@@ -56,15 +55,11 @@ func newLocalElection(deviceID topodevice.ID, nodeID cluster.NodeID, conn *grpc.
 
 // newDeviceMastershipElection creates and enters a new device mastership election
 func newDeviceMastershipElection(deviceID topodevice.ID, election election.Election) (deviceMastershipElection, error) {
-	deviceElection := &atomixDeviceMastershipElection{
+	return &atomixDeviceMastershipElection{
 		deviceID: deviceID,
 		election: election,
 		watchers: make([]chan<- Mastership, 0, 1),
-	}
-	if err := deviceElection.enter(); err != nil {
-		return nil, err
-	}
-	return deviceElection, nil
+	}, nil
 }
 
 // deviceMastershipElection is an election for a single device mastership
@@ -77,20 +72,24 @@ type deviceMastershipElection interface {
 	// DeviceID returns the device for which this election provides mastership
 	DeviceID() topodevice.ID
 
+	// join joins the mastership election
+	join() (Mastership, error)
+
+	// leave leaves thee mastership election
+	leave() (Mastership, error)
+
 	// isMaster returns a bool indicating whether the local node is the master for the device
 	isMaster() (bool, error)
 
 	// watch watches the election for changes
-	watch(ch chan<- Mastership) error
+	watch(ch chan<- stream.Event) (stream.Context, error)
 }
 
 // atomixDeviceMastershipElection is a persistent device mastership election
 type atomixDeviceMastershipElection struct {
-	deviceID   topodevice.ID
-	election   election.Election
-	mastership *Mastership
-	watchers   []chan<- Mastership
-	mu         sync.RWMutex
+	deviceID topodevice.ID
+	election election.Election
+	watchers []chan<- Mastership
 }
 
 func (e *atomixDeviceMastershipElection) NodeID() cluster.NodeID {
@@ -101,82 +100,67 @@ func (e *atomixDeviceMastershipElection) DeviceID() topodevice.ID {
 	return e.deviceID
 }
 
-// enter enters the election
-func (e *atomixDeviceMastershipElection) enter() error {
-	ch := make(chan *election.Event)
-	if err := e.election.Watch(context.Background(), ch); err != nil {
-		return err
-	}
-
-	// Enter the election to get the current leadership term
+func (e *atomixDeviceMastershipElection) join() (Mastership, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
 	term, err := e.election.Enter(ctx)
-	cancel()
 	if err != nil {
-		_ = e.election.Close()
-		return err
+		return Mastership{}, err
 	}
-
-	// Set the mastership term
-	e.mu.Lock()
-	e.mastership = &Mastership{
+	return Mastership{
 		Device: e.deviceID,
-		Master: cluster.NodeID(term.Leader),
 		Term:   Term(term.ID),
-	}
-	e.mu.Unlock()
-
-	// Wait for the election event to be received before returning
-	for event := range ch {
-		if event.Term.ID == term.ID {
-			go e.watchElection(ch)
-			return nil
-		}
-	}
-
-	_ = e.election.Close()
-	return errors.New("failed to enter election")
+		Master: cluster.NodeID(term.Leader),
+	}, nil
 }
 
-// watchElection watches the election events and updates mastership info
-func (e *atomixDeviceMastershipElection) watchElection(ch <-chan *election.Event) {
-	for event := range ch {
-		var mastership *Mastership
-		e.mu.Lock()
-		if uint64(e.mastership.Term) != event.Term.ID {
-			mastership = &Mastership{
-				Device: e.deviceID,
-				Term:   Term(event.Term.ID),
-				Master: cluster.NodeID(event.Term.Leader),
-			}
-			e.mastership = mastership
-		}
-		e.mu.Unlock()
-
-		if mastership != nil {
-			e.mu.RLock()
-			for _, watcher := range e.watchers {
-				watcher <- *mastership
-			}
-			e.mu.RUnlock()
-		}
+func (e *atomixDeviceMastershipElection) leave() (Mastership, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	term, err := e.election.Leave(ctx)
+	if err != nil {
+		return Mastership{}, err
 	}
+	return Mastership{
+		Device: e.deviceID,
+		Term:   Term(term.ID),
+		Master: cluster.NodeID(term.Leader),
+	}, nil
 }
 
 func (e *atomixDeviceMastershipElection) isMaster() (bool, error) {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	if e.mastership == nil || string(e.mastership.Master) != e.election.ID() {
-		return false, nil
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	term, err := e.election.GetTerm(ctx)
+	if err != nil {
+		return false, err
 	}
-	return true, nil
+	return term.Leader == e.election.ID(), nil
 }
 
-func (e *atomixDeviceMastershipElection) watch(ch chan<- Mastership) error {
-	e.mu.Lock()
-	e.watchers = append(e.watchers, ch)
-	e.mu.Unlock()
-	return nil
+func (e *atomixDeviceMastershipElection) watch(ch chan<- stream.Event) (stream.Context, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	electionCh := make(chan *election.Event)
+	if err := e.election.Watch(ctx, electionCh); err != nil {
+		return nil, err
+	}
+
+	go func() {
+		defer close(ch)
+		for event := range electionCh {
+			ch <- stream.Event{
+				Type: stream.Updated,
+				Object: Mastership{
+					Device: e.deviceID,
+					Term:   Term(event.Term.ID),
+					Master: cluster.NodeID(event.Term.Leader),
+				},
+			}
+		}
+	}()
+	return stream.NewCancelContext(cancel), nil
 }
 
 func (e *atomixDeviceMastershipElection) Close() error {

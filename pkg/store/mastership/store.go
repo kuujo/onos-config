@@ -17,6 +17,7 @@ package mastership
 import (
 	"context"
 	"github.com/onosproject/onos-config/pkg/store/cluster"
+	"github.com/onosproject/onos-config/pkg/store/stream"
 	"github.com/onosproject/onos-config/pkg/store/utils"
 	topodevice "github.com/onosproject/onos-topo/api/device"
 	"google.golang.org/grpc"
@@ -34,11 +35,17 @@ type Store interface {
 	// NodeID returns the local node identifier used in mastership elections
 	NodeID() cluster.NodeID
 
+	// Join joins the mastership election for the device
+	Join(id topodevice.ID) (Mastership, error)
+
+	// Leave leaves the mastership election for the device
+	Leave(id topodevice.ID) (Mastership, error)
+
 	// IsMaster returns a boolean indicating whether the local node is the master for the given device
 	IsMaster(id topodevice.ID) (bool, error)
 
 	// Watch watches the store for mastership changes
-	Watch(topodevice.ID, chan<- Mastership) error
+	Watch(topodevice.ID, chan<- stream.Event) (stream.Context, error)
 }
 
 // Mastership contains information about a device mastership term
@@ -131,6 +138,22 @@ func (s *atomixStore) NodeID() cluster.NodeID {
 	return s.nodeID
 }
 
+func (s *atomixStore) Join(deviceID topodevice.ID) (Mastership, error) {
+	election, err := s.getElection(deviceID)
+	if err != nil {
+		return Mastership{}, err
+	}
+	return election.join()
+}
+
+func (s *atomixStore) Leave(deviceID topodevice.ID) (Mastership, error) {
+	election, err := s.getElection(deviceID)
+	if err != nil {
+		return Mastership{}, err
+	}
+	return election.leave()
+}
+
 func (s *atomixStore) IsMaster(deviceID topodevice.ID) (bool, error) {
 	election, err := s.getElection(deviceID)
 	if err != nil {
@@ -139,10 +162,10 @@ func (s *atomixStore) IsMaster(deviceID topodevice.ID) (bool, error) {
 	return election.isMaster()
 }
 
-func (s *atomixStore) Watch(deviceID topodevice.ID, ch chan<- Mastership) error {
+func (s *atomixStore) Watch(deviceID topodevice.ID, ch chan<- stream.Event) (stream.Context, error) {
 	election, err := s.getElection(deviceID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	return election.watch(ch)
 }

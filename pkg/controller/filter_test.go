@@ -18,6 +18,7 @@ import (
 	"github.com/onosproject/onos-config/api/types"
 	"github.com/onosproject/onos-config/pkg/store/cluster"
 	"github.com/onosproject/onos-config/pkg/store/mastership"
+	"github.com/onosproject/onos-config/pkg/store/stream"
 	topodevice "github.com/onosproject/onos-topo/api/device"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -54,6 +55,16 @@ func TestMastershipFilter(t *testing.T) {
 	device1 := topodevice.ID("device1")
 	device2 := topodevice.ID("device2")
 
+	_, err = store1.Join(device1)
+	assert.NoError(t, err)
+	_, err = store2.Join(device1)
+	assert.NoError(t, err)
+
+	_, err = store2.Join(device2)
+	assert.NoError(t, err)
+	_, err = store1.Join(device2)
+	assert.NoError(t, err)
+
 	master, err := store1.IsMaster(device1)
 	assert.NoError(t, err)
 	assert.True(t, master)
@@ -75,8 +86,8 @@ func TestMastershipFilter(t *testing.T) {
 	assert.True(t, filter2.Accept(types.ID(device2)))
 	assert.False(t, filter1.Accept(types.ID(device2)))
 
-	ch := make(chan mastership.Mastership)
-	err = store2.Watch(device1, ch)
+	ch := make(chan stream.Event)
+	_, err = store2.Watch(device1, ch)
 	assert.NoError(t, err)
 
 	err = store1.Close()
