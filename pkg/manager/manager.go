@@ -30,6 +30,7 @@ import (
 	"github.com/onosproject/onos-config/pkg/southbound"
 	"github.com/onosproject/onos-config/pkg/southbound/synchronizer"
 	"github.com/onosproject/onos-config/pkg/store/change/device"
+	devicestate "github.com/onosproject/onos-config/pkg/store/change/device/state"
 	"github.com/onosproject/onos-config/pkg/store/change/network"
 	devicestore "github.com/onosproject/onos-config/pkg/store/device"
 	"github.com/onosproject/onos-config/pkg/store/device/cache"
@@ -59,6 +60,7 @@ type Manager struct {
 	NetworkChangesStore       network.Store
 	NetworkSnapshotStore      networksnap.Store
 	DeviceSnapshotStore       devicesnap.Store
+	DeviceStateStore          devicestate.Store
 	networkChangeController   *controller.Controller
 	deviceChangeController    *controller.Controller
 	networkSnapshotController *controller.Controller
@@ -75,8 +77,8 @@ type Manager struct {
 
 // NewManager initializes the network config manager subsystem.
 func NewManager(leadershipStore leadership.Store, mastershipStore mastership.Store,
-	deviceChangesStore device.Store, deviceStore devicestore.Store, deviceCache cache.Cache,
-	networkChangesStore network.Store, networkSnapshotStore networksnap.Store,
+	deviceChangesStore device.Store, deviceStateStore devicestate.Store, deviceStore devicestore.Store,
+	deviceCache cache.Cache, networkChangesStore network.Store, networkSnapshotStore networksnap.Store,
 	deviceSnapshotStore devicesnap.Store, allowUnvalidatedConfig bool) (*Manager, error) {
 	log.Info("Creating Manager")
 	modelReg := &modelregistry.ModelRegistry{
@@ -88,6 +90,7 @@ func NewManager(leadershipStore leadership.Store, mastershipStore mastership.Sto
 
 	mgr = Manager{
 		DeviceChangesStore:        deviceChangesStore,
+		DeviceStateStore:          deviceStateStore,
 		DeviceStore:               deviceStore,
 		DeviceCache:               deviceCache,
 		NetworkChangesStore:       networkChangesStore,
