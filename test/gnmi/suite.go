@@ -15,8 +15,11 @@
 package gnmi
 
 import (
+	"github.com/onosproject/onos-test/pkg/benchmark"
+	"github.com/onosproject/onos-test/pkg/onit/env"
 	"github.com/onosproject/onos-test/pkg/onit/setup"
 	"github.com/onosproject/onos-test/pkg/test"
+	"github.com/openconfig/gnmi/client/gnmi"
 )
 
 // TestSuite is the primary onos-config test suite
@@ -43,4 +46,36 @@ func (s *HATestSuite) SetupTestSuite() {
 	setup.Topo().SetReplicas(2)
 	setup.Config().SetReplicas(2)
 	setup.SetupOrDie()
+}
+
+// BenchmarkSuite is an onos-config gNMI benchmark suite
+type BenchmarkSuite struct {
+	benchmark.Suite
+	simulator env.SimulatorEnv
+	client    *client.Client
+}
+
+// SetupSuite :: benchmark
+func (s *BenchmarkSuite) SetupSuite(c *benchmark.Context) {
+	setup.Atomix()
+	setup.Partitions().Raft()
+	setup.Topo().SetReplicas(2)
+	setup.Config().SetReplicas(2)
+	setup.SetupOrDie()
+}
+
+// SetupBenchmark :: benchmark
+func (s *BenchmarkSuite) SetupBenchmark(c *benchmark.Context) {
+	s.simulator = env.NewSimulator().AddOrDie()
+	client, err := env.Config().NewGNMIClient()
+	if err != nil {
+		panic(err)
+	}
+	s.client = client
+}
+
+// TearDownBenchmark :: benchmark
+func (s *BenchmarkSuite) TearDownBenchmark(c *benchmark.Context) {
+	s.simulator.RemoveOrDie()
+	s.client.Close()
 }
