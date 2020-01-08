@@ -26,7 +26,6 @@ import (
 	"github.com/onosproject/onos-config/pkg/modelregistry"
 	"github.com/onosproject/onos-config/pkg/modelregistry/jsonvalues"
 	"github.com/onosproject/onos-config/pkg/store"
-	networkchangestore "github.com/onosproject/onos-config/pkg/store/change/network"
 	"github.com/onosproject/onos-config/pkg/store/device/cache"
 	"github.com/onosproject/onos-config/pkg/store/stream"
 	"github.com/onosproject/onos-config/pkg/utils"
@@ -55,9 +54,7 @@ func (s *Server) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetRespon
 	targetUpdates := make(mapTargetUpdates)
 	targetRemoves := make(mapTargetRemoves)
 
-	log.Info("gNMI Set Request", req)
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	log.Infof("gNMI SetRequest %v", req)
 	//Update
 	for _, u := range req.GetUpdate() {
 		target := u.Path.GetTarget()
@@ -149,17 +146,25 @@ func (s *Server) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetRespon
 		}
 	}
 
-	//Creating and setting the config on the atomix Store
-	errSet := mgr.SetNetworkConfig(targetUpdates, targetRemoves, deviceInfo, netCfgChangeName)
+	// Watch the NetworkChange store for changes to the new network change.
+	// Note: it's important that this watch be registered *before* the change is created to avoid races in which
+	// events could arrive before the watch is registered and thus be missed.
+	networkChan := make(chan stream.Event)
+	watchCtx, watchErr := mgr.NetworkChangesStore.WatchChange(networkchange.ID(netCfgChangeName), networkChan)
+	if watchErr != nil {
+		return nil, fmt.Errorf("can't complete set operation on target due to %s", watchErr)
+	}
+	defer watchCtx.Close()
 
+	// Once the watch has been registered, add the NetworkChange
+	errSet := mgr.SetNetworkConfig(targetUpdates, targetRemoves, deviceInfo, netCfgChangeName)
 	if errSet != nil {
 		log.Errorf("Error while setting config in atomix %s", errSet.Error())
 		return nil, status.Error(codes.Internal, errSet.Error())
 	}
 
-	// TODO: Not clear if there is a period of time where this misses out on events
-	//Obtaining response based on distributed store generated events
-	updateResultsAtomix, errListen := listenAndBuildResponse(mgr, networkchange.ID(netCfgChangeName))
+	// Wait for the change to be propagated and build a response
+	updateResultsAtomix, errListen := listenAndBuildResponse(networkChan)
 	if errListen != nil {
 		log.Errorf("Error while building atomix based response %s", errListen.Error())
 		return nil, status.Error(codes.Internal, errListen.Error())
@@ -182,6 +187,7 @@ func (s *Server) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetRespon
 		Extension: extensions,
 	}
 
+	log.Infof("gNMI SetResponse %v", setResponse)
 	return setResponse, nil
 }
 
@@ -319,15 +325,9 @@ func (s *Server) checkForReadOnly(target string, deviceType devicetype.Type, ver
 	return nil
 }
 
-func listenAndBuildResponse(mgr *manager.Manager, changeID networkchange.ID) ([]*gnmi.UpdateResult, error) {
-	networkChan := make(chan stream.Event)
-	ctx, errWatch := mgr.NetworkChangesStore.Watch(networkChan, networkchangestore.WithChangeID(changeID))
-	if errWatch != nil {
-		return nil, fmt.Errorf("can't complete set operation on target due to %s", errWatch)
-	}
-	defer ctx.Close()
+func listenAndBuildResponse(ch <-chan stream.Event) ([]*gnmi.UpdateResult, error) {
 	updateResults := make([]*gnmi.UpdateResult, 0)
-	for changeEvent := range networkChan {
+	for changeEvent := range ch {
 		change := changeEvent.Object.(*networkchange.NetworkChange)
 		log.Infof("Received notification for change ID %s, phase %s, state %s", change.ID,
 			change.Status.Phase, change.Status.State)
