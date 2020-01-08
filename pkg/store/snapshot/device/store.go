@@ -78,7 +78,7 @@ func newLocalStore(conn *grpc.ClientConn) (Store, error) {
 		Namespace: "local",
 		Name:      deviceSnapshotsName,
 	}
-	deviceSnapshots, err := _map.New(context.Background(), deviceSnapshotsName, []*grpc.ClientConn{conn})
+	deviceSnapshots, err := _map.New(context.Background(), deviceSnapshotsName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func newLocalStore(conn *grpc.ClientConn) (Store, error) {
 		Namespace: "local",
 		Name:      snapshotsName,
 	}
-	snapshots, err := _map.New(context.Background(), snapshotsName, []*grpc.ClientConn{conn})
+	snapshots, err := _map.New(context.Background(), snapshotsName, nil)
 	if err != nil {
 		return nil, err
 	}

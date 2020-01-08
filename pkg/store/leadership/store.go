@@ -102,7 +102,7 @@ func newLocalStore(nodeID cluster.NodeID, conn *grpc.ClientConn) (Store, error) 
 		Name:      primitiveName,
 	}
 
-	election, err := election.New(context.Background(), name, []*grpc.ClientConn{conn}, session.WithID(string(nodeID)))
+	election, err := election.New(context.Background(), name, nil, session.WithID(string(nodeID)))
 	if err != nil {
 		return nil, err
 	}

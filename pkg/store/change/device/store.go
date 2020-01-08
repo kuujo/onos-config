@@ -80,7 +80,7 @@ func newLocalStore(conn *grpc.ClientConn) (Store, error) {
 			Namespace: "local",
 			Name:      getDeviceChangesName(deviceID),
 		}
-		return indexedmap.New(context.Background(), counterName, []*grpc.ClientConn{conn})
+		return indexedmap.New(context.Background(), counterName, nil)
 	}
 
 	return &atomixStore{

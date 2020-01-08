@@ -47,7 +47,7 @@ func newLocalElection(deviceID topodevice.ID, nodeID cluster.NodeID, conn *grpc.
 		Namespace: "local",
 		Name:      fmt.Sprintf("mastership-%s", deviceID),
 	}
-	election, err := election.New(context.Background(), name, []*grpc.ClientConn{conn}, session.WithID(string(nodeID)), session.WithTimeout(15*time.Second))
+	election, err := election.New(context.Background(), name, nil, session.WithID(string(nodeID)), session.WithTimeout(15*time.Second))
 	if err != nil {
 		return nil, err
 	}

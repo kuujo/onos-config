@@ -76,7 +76,7 @@ func newLocalStore(conn *grpc.ClientConn) (Store, error) {
 		Namespace: "local",
 		Name:      snapshotsName,
 	}
-	snapshots, err := indexedmap.New(context.Background(), snapshotsName, []*grpc.ClientConn{conn})
+	snapshots, err := indexedmap.New(context.Background(), snapshotsName, nil)
 	if err != nil {
 		return nil, err
 	}
