@@ -56,6 +56,7 @@ ChangeValue is an individual Path/Value and removed flag combination in a Change
 | path | [string](#string) |  | &#39;path&#39; is the path to change |
 | value | [TypedValue](#onos.config.change.device.TypedValue) |  | &#39;value&#39; is the change value |
 | removed | [bool](#bool) |  | &#39;removed&#39; indicates whether this is a delete |
+| prev_index | [uint64](#uint64) |  | &#39;prev_index&#39; is a link to the previous update of this path |
 
 
 

@@ -100,25 +100,28 @@ enum ValueType {
 // TypedValue is a value represented as a byte array
 message TypedValue {
     // 'bytes' is the bytes array
-    bytes bytes = 1  [json_name="Bytes", (gogoproto.jsontag) = "Bytes,omitempty"];
+    bytes bytes = 1 [json_name = "Bytes", (gogoproto.jsontag) = "Bytes,omitempty"];
 
     // 'type' is the value type
-    ValueType type = 2 [json_name="Type", (gogoproto.jsontag) = "Type,omitempty"];
+    ValueType type = 2 [json_name = "Type", (gogoproto.jsontag) = "Type,omitempty"];
 
     // 'type_opts' is a set of type options
-    repeated int32 type_opts = 3  [json_name="TypeOpts", (gogoproto.jsontag) = "TypeOpts,omitempty"];
+    repeated int32 type_opts = 3 [json_name = "TypeOpts", (gogoproto.jsontag) = "TypeOpts,omitempty"];
 }
 
 // ChangeValue is an individual Path/Value and removed flag combination in a Change
 message ChangeValue {
     // 'path' is the path to change
-    string path = 1 [json_name="Path", (gogoproto.jsontag) = "Path,omitempty"];
+    string path = 1 [json_name = "Path", (gogoproto.jsontag) = "Path,omitempty"];
 
     // 'value' is the change value
-    TypedValue value = 2 [json_name="Value", (gogoproto.jsontag) = "Value,omitempty"];
+    TypedValue value = 2 [json_name = "Value", (gogoproto.jsontag) = "Value,omitempty"];
 
     // 'removed' indicates whether this is a delete
     bool removed = 3 [(gogoproto.jsontag) = "Remove,omitempty"];
+
+    // 'prev_index' is a link to the previous update of this path
+    uint64 prev_index = 4 [(gogoproto.casttype) = "github.com/onosproject/onos-config/api/types.Index"];
 }
 
 // PathValue is an individual Path/Value combination - it is like ChangeValue above
@@ -126,8 +129,8 @@ message ChangeValue {
 // Instead it is useful for handling OpState and Snapshots where `removed` is not relevant
 message PathValue {
     // 'path' is the path to change
-    string path = 1 [json_name="Path", (gogoproto.jsontag) = "Path,omitempty"];
+    string path = 1 [json_name = "Path", (gogoproto.jsontag) = "Path,omitempty"];
 
     // 'value' is the change value
-    TypedValue value = 2 [json_name="Value", (gogoproto.jsontag) = "Value,omitempty"];
+    TypedValue value = 2 [json_name = "Value", (gogoproto.jsontag) = "Value,omitempty"];
 }
