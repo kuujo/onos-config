@@ -19,12 +19,14 @@ import (
 	changetypes "github.com/onosproject/onos-config/api/types/change"
 	devicechange "github.com/onosproject/onos-config/api/types/change/device"
 	networkchange "github.com/onosproject/onos-config/api/types/change/network"
+	"github.com/onosproject/onos-config/api/types/device"
 	"github.com/onosproject/onos-config/pkg/controller"
 	devicechangestore "github.com/onosproject/onos-config/pkg/store/change/device"
 	networkchangestore "github.com/onosproject/onos-config/pkg/store/change/network"
 	devicestore "github.com/onosproject/onos-config/pkg/store/device"
 	"github.com/onosproject/onos-config/pkg/store/device/cache"
 	leadershipstore "github.com/onosproject/onos-config/pkg/store/leadership"
+	devicesnapstore "github.com/onosproject/onos-config/pkg/store/snapshot/device"
 	"github.com/onosproject/onos-config/pkg/utils/logging"
 	devicetopo "github.com/onosproject/onos-topo/api/device"
 	"google.golang.org/grpc/codes"
@@ -34,7 +36,7 @@ import (
 var log = logging.GetLogger("controller", "change", "network")
 
 // NewController returns a new config controller
-func NewController(leadership leadershipstore.Store, deviceCache cache.Cache, devices devicestore.Store, networkChanges networkchangestore.Store, deviceChanges devicechangestore.Store) *controller.Controller {
+func NewController(leadership leadershipstore.Store, deviceCache cache.Cache, devices devicestore.Store, networkChanges networkchangestore.Store, deviceChanges devicechangestore.Store, deviceSnapshots devicesnapstore.Store) *controller.Controller {
 	c := controller.NewController("NetworkChange")
 	c.Activate(&controller.LeadershipActivator{
 		Store: leadership,
@@ -50,6 +52,7 @@ func NewController(leadership leadershipstore.Store, deviceCache cache.Cache, de
 	c.Reconcile(&Reconciler{
 		networkChanges: networkChanges,
 		deviceChanges:  deviceChanges,
+		deviceStates:   newDeviceStateManager(networkChanges, deviceSnapshots),
 		devices:        devices,
 	})
 	return c
@@ -59,6 +62,7 @@ func NewController(leadership leadershipstore.Store, deviceCache cache.Cache, de
 type Reconciler struct {
 	networkChanges networkchangestore.Store
 	deviceChanges  devicechangestore.Store
+	deviceStates   *deviceStateManager
 	devices        devicestore.Store
 }
 
@@ -149,7 +153,6 @@ func hasDeviceChanges(change *networkchange.NetworkChange) bool {
 // createDeviceChanges creates device changes in sequential order
 func (r *Reconciler) createDeviceChanges(networkChange *networkchange.NetworkChange) (bool, error) {
 	// If the previous network change has not created device changes, requeue to wait for changes to be propagated
-	// TODO devices changes should be written to stores by index to avoid having to manage index order
 	prevChange, err := r.networkChanges.GetByIndex(networkChange.Index - 1)
 	if err != nil {
 		return false, err
@@ -160,6 +163,16 @@ func (r *Reconciler) createDeviceChanges(networkChange *networkchange.NetworkCha
 	// Loop through changes and create device changes
 	refs := make([]*networkchange.DeviceChangeRef, len(networkChange.Changes))
 	for i, change := range networkChange.Changes {
+		state, err := r.deviceStates.getDeviceState(device.NewVersionedID(change.DeviceID, change.DeviceVersion))
+		if err != nil {
+			return false, err
+		}
+
+		// Record the index of the prior update for each path
+		for _, value := range change.Values {
+			value.PrevIndex = types.Index(state.get(value.Path))
+		}
+
 		deviceChange := &devicechange.DeviceChange{
 			Index: devicechange.Index(networkChange.Index),
 			NetworkChange: devicechange.NetworkChangeRef{
@@ -172,6 +185,12 @@ func (r *Reconciler) createDeviceChanges(networkChange *networkchange.NetworkCha
 		if err := r.deviceChanges.Create(deviceChange); err != nil {
 			return false, err
 		}
+
+		// Record the index for each updated path
+		for _, value := range change.Values {
+			state.update(value.Path, deviceChange.Index)
+		}
+
 		refs[i] = &networkchange.DeviceChangeRef{
 			DeviceChangeID: deviceChange.ID,
 		}
@@ -200,43 +219,37 @@ func (r *Reconciler) canTryChange(change *networkchange.NetworkChange, deviceCha
 
 	// First, check if the devices affected by the change are available
 	for _, deviceChange := range change.Changes {
+		// Get the device from the topo service
 		device, err := r.devices.Get(devicetopo.ID(deviceChange.DeviceID))
 		if err != nil && status.Code(err) != codes.NotFound {
 			return false, err
 		} else if device == nil {
 			return false, nil
 		}
+
+		// If the device state is not connected, skip this change
 		state := getProtocolState(device)
 		if state != devicetopo.ChannelState_CONNECTED {
 			log.Infof("Cannot apply NetworkChange %v: %v is offline", change.ID, deviceChange.DeviceID)
 			return false, nil
 		}
-	}
 
-	// If the devices are available, ensure the change does not intersect prior changes
-	prevChange, err := r.networkChanges.GetPrev(change.Index)
-	if err != nil {
-		return false, err
-	}
-
-	for prevChange != nil {
-		// If the change intersects this change, verify it's complete
-		if isIntersectingChange(change, prevChange) {
-			// If the change is in the CHANGE phase, verify it's complete
-			// If the change is in the ROLLBACK phase, verify it's complete but continue iterating
-			// back to the last CHANGE phase change
-			if prevChange.Status.Phase == changetypes.Phase_CHANGE {
-				return prevChange.Status.State != changetypes.State_PENDING, nil
-			} else if prevChange.Status.Phase == changetypes.Phase_ROLLBACK {
-				if prevChange.Status.State == changetypes.State_PENDING {
-					return false, nil
-				}
+		// For each change path/value, ensure the prior change is COMPLETE before processing this change
+		for _, changeValue := range deviceChange.Values {
+			if changeValue.PrevIndex == 0 {
+				continue
 			}
-		}
 
-		prevChange, err = r.networkChanges.GetPrev(prevChange.Index)
-		if err != nil {
-			return false, err
+			// Get the prior change for the path
+			prevChange, err := r.networkChanges.GetByIndex(networkchange.Index(changeValue.PrevIndex))
+			if err != nil {
+				return false, err
+			}
+
+			// If the change is not complete, do not process this change
+			if prevChange.Status.State != changetypes.State_COMPLETE {
+				return false, nil
+			}
 		}
 	}
 	return true, nil
