@@ -19,17 +19,16 @@ import (
 	"github.com/onosproject/onos-config/api/types"
 	changetypes "github.com/onosproject/onos-config/api/types/change"
 	devicechange "github.com/onosproject/onos-config/api/types/change/device"
+	"github.com/onosproject/onos-config/api/types/device"
 	"github.com/onosproject/onos-config/pkg/controller"
 	"github.com/onosproject/onos-config/pkg/southbound"
 	changestore "github.com/onosproject/onos-config/pkg/store/change/device"
-	devicechangeutils "github.com/onosproject/onos-config/pkg/store/change/device/utils"
 	devicestore "github.com/onosproject/onos-config/pkg/store/device"
 	"github.com/onosproject/onos-config/pkg/store/device/cache"
 	mastershipstore "github.com/onosproject/onos-config/pkg/store/mastership"
 	"github.com/onosproject/onos-config/pkg/utils/logging"
 	"github.com/onosproject/onos-config/pkg/utils/values"
 	topodevice "github.com/onosproject/onos-topo/api/device"
-	"strings"
 )
 
 var log = logging.GetLogger("controller", "change", "device")
@@ -207,40 +206,37 @@ func getProtocolState(device *topodevice.Device) topodevice.ChannelState {
 
 // computeRollback returns a change containing the previous value for each path of the rollbackChange
 func (r *Reconciler) computeRollback(deviceChange *devicechange.DeviceChange) (*devicechange.Change, error) {
-	//TODO We might want to consider doing reverse iteration to get the previous value for a path instead of
-	// reading up to the previous change for the target. see comments on PR #805
-	previousValues := make([]*devicechange.ChangeValue, 0)
-	prevValues, err := devicechangeutils.ExtractFullConfig(deviceChange.Change.GetVersionedDeviceID(), nil, r.changes, 0)
-	if err != nil {
-		return nil, fmt.Errorf("can't get last config on network config %s for target %s, %s",
-			string(deviceChange.ID), deviceChange.Change.DeviceID, err)
-	}
-	rollbackChange := deviceChange.Change
-	alreadyUpdated := make(map[string]struct{})
-	for _, rbValue := range rollbackChange.Values {
-		for _, prevVal := range prevValues {
-			if prevVal.Path == rbValue.Path ||
-				rbValue.Removed && strings.HasPrefix(prevVal.Path, rbValue.Path) {
-				alreadyUpdated[rbValue.Path] = struct{}{}
-				previousValues = append(previousValues, &devicechange.ChangeValue{
-					Path:  prevVal.Path,
-					Value: prevVal.Value,
-				})
-			}
-		}
-		if _, ok := alreadyUpdated[rbValue.Path]; !ok {
-			previousValues = append(previousValues, &devicechange.ChangeValue{
-				Path:    rbValue.Path,
+	prevValues := make([]*devicechange.ChangeValue, 0)
+	for _, changeValue := range deviceChange.Change.Values {
+		if changeValue.PrevIndex == 0 {
+			prevValues = append(prevValues, &devicechange.ChangeValue{
+				Path:    changeValue.Path,
 				Removed: true,
 			})
+		} else {
+			var err error
+			prevChange := deviceChange
+			prevValue := changeValue
+			for prevChange != nil && prevChange.Status.Phase == changetypes.Phase_ROLLBACK {
+				prevChange, err = r.changes.GetByIndex(device.NewVersionedID(prevChange.Change.DeviceID, prevChange.Change.DeviceVersion), devicechange.Index(prevValue.PrevIndex))
+				if err != nil {
+					return nil, err
+				}
+				for _, prevChangeValue := range prevChange.Change.Values {
+					if prevChangeValue.Path == changeValue.Path {
+						prevValue = prevChangeValue
+						break
+					}
+				}
+			}
+			prevValues = append(prevValues, prevValue)
 		}
 	}
-	deltaChange := &devicechange.Change{
-		DeviceID:      rollbackChange.DeviceID,
-		DeviceVersion: rollbackChange.DeviceVersion,
-		Values:        previousValues,
-	}
-	return deltaChange, nil
+	return &devicechange.Change{
+		DeviceID:      deviceChange.Change.DeviceID,
+		DeviceVersion: deviceChange.Change.DeviceVersion,
+		Values:        prevValues,
+	}, nil
 }
 
 var _ controller.Reconciler = &Reconciler{}

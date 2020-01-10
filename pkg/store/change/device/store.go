@@ -91,6 +91,9 @@ type Store interface {
 	// Get gets a device change
 	Get(id devicechange.ID) (*devicechange.DeviceChange, error)
 
+	// GetByIndex gets a device change by index
+	GetByIndex(deviceID device.VersionedID, index devicechange.Index) (*devicechange.DeviceChange, error)
+
 	// Create creates a new device change
 	Create(change *devicechange.DeviceChange) error
 
@@ -177,6 +180,24 @@ func (s *atomixStore) Get(id devicechange.ID) (*devicechange.DeviceChange, error
 	defer cancel()
 
 	entry, err := changes.Get(ctx, string(id))
+	if err != nil {
+		return nil, err
+	} else if entry == nil {
+		return nil, nil
+	}
+	return decodeChange(entry)
+}
+
+func (s *atomixStore) GetByIndex(deviceID device.VersionedID, index devicechange.Index) (*devicechange.DeviceChange, error) {
+	changes, err := s.getDeviceChanges(deviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	entry, err := changes.GetIndex(ctx, indexedmap.Index(index))
 	if err != nil {
 		return nil, err
 	} else if entry == nil {

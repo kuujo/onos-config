@@ -36,7 +36,13 @@ import (
 var log = logging.GetLogger("controller", "change", "network")
 
 // NewController returns a new config controller
-func NewController(leadership leadershipstore.Store, deviceCache cache.Cache, devices devicestore.Store, networkChanges networkchangestore.Store, deviceChanges devicechangestore.Store, deviceSnapshots devicesnapstore.Store) *controller.Controller {
+func NewController(
+	leadership leadershipstore.Store,
+	deviceCache cache.Cache,
+	devices devicestore.Store,
+	networkChanges networkchangestore.Store,
+	deviceChanges devicechangestore.Store,
+	deviceSnapshots devicesnapstore.Store) *controller.Controller {
 	c := controller.NewController("NetworkChange")
 	c.Activate(&controller.LeadershipActivator{
 		Store: leadership,

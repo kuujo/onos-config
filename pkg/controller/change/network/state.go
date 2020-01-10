@@ -45,9 +45,10 @@ func (m *deviceStateManager) getDeviceState(deviceID device.VersionedID) (*devic
 		snapshot, err := m.snapshotStore.Load(deviceID)
 		if err != nil {
 			return nil, err
-		}
-		for _, value := range snapshot.Values {
-			state[value.Path] = snapshot.ChangeIndex
+		} else if snapshot != nil {
+			for _, value := range snapshot.Values {
+				state[value.Path] = snapshot.ChangeIndex
+			}
 		}
 
 		device = &deviceState{
