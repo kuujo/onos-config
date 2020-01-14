@@ -25,6 +25,7 @@ import (
 	devicechanges "github.com/onosproject/onos-config/pkg/store/change/device"
 	networkchanges "github.com/onosproject/onos-config/pkg/store/change/network"
 	devicestore "github.com/onosproject/onos-config/pkg/store/device"
+	devicesnapshots "github.com/onosproject/onos-config/pkg/store/snapshot/device"
 	devicetopo "github.com/onosproject/onos-topo/api/device"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -41,13 +42,14 @@ const (
 
 // TestReconcilerChangeRollback tests applying and then rolling back a change
 func TestReconcilerChangeRollback(t *testing.T) {
-	networkChanges, deviceChanges, devices := newStores(t)
+	networkChanges, deviceChanges, deviceSnapshots, devices := newStores(t)
 	defer networkChanges.Close()
 	defer deviceChanges.Close()
 
 	reconciler := &Reconciler{
 		networkChanges: networkChanges,
 		deviceChanges:  deviceChanges,
+		deviceStates:   newDeviceStateManager(networkChanges, deviceSnapshots),
 		devices:        devices,
 	}
 
@@ -195,13 +197,14 @@ func TestReconcilerChangeRollback(t *testing.T) {
 
 // TestReconcilerError tests an error reverting a change to PENDING
 func TestReconcilerError(t *testing.T) {
-	networkChanges, deviceChanges, devices := newStores(t)
+	networkChanges, deviceChanges, deviceSnapshots, devices := newStores(t)
 	defer networkChanges.Close()
 	defer deviceChanges.Close()
 
 	reconciler := &Reconciler{
 		networkChanges: networkChanges,
 		deviceChanges:  deviceChanges,
+		deviceStates:   newDeviceStateManager(networkChanges, deviceSnapshots),
 		devices:        devices,
 	}
 
@@ -323,10 +326,12 @@ func TestReconcilerError(t *testing.T) {
 	assert.Equal(t, change.State_PENDING, networkChange.Status.State)
 }
 
-func newStores(t *testing.T) (networkchanges.Store, devicechanges.Store, devicestore.Store) {
+func newStores(t *testing.T) (networkchanges.Store, devicechanges.Store, devicesnapshots.Store, devicestore.Store) {
 	networkChanges, err := networkchanges.NewLocalStore()
 	assert.NoError(t, err)
 	deviceChanges, err := devicechanges.NewLocalStore()
+	assert.NoError(t, err)
+	deviceSnapshots, err := devicesnapshots.NewLocalStore()
 	assert.NoError(t, err)
 	ctrl := gomock.NewController(t)
 	client := NewMockDeviceServiceClient(ctrl)
@@ -346,7 +351,7 @@ func newStores(t *testing.T) (networkchanges.Store, devicechanges.Store, devices
 	}).AnyTimes()
 	devices, err := devicestore.NewStore(client)
 	assert.NoError(t, err)
-	return networkChanges, deviceChanges, devices
+	return networkChanges, deviceChanges, deviceSnapshots, devices
 }
 
 func newChange(id networkchange.ID, devices ...device.ID) *networkchange.NetworkChange {

@@ -34,10 +34,10 @@ func TestReconciler_computeRollback_singleUpdate(t *testing.T) {
 	defer deviceChangesStore.Close()
 
 	deviceChangeIf1Change := &devicechange.DeviceChange{
-		Index: 1,
+		Index: 2,
 		NetworkChange: devicechange.NetworkChangeRef{
 			ID:    types.ID(fmt.Sprintf("%s-if%d-change", device1, 1)),
-			Index: types.Index(1),
+			Index: types.Index(2),
 		},
 		Change: &devicechange.Change{
 			DeviceID:      device1,
