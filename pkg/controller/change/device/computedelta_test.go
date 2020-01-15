@@ -17,6 +17,7 @@ package device
 import (
 	"fmt"
 	"github.com/onosproject/onos-config/api/types"
+	"github.com/onosproject/onos-config/api/types/change"
 	devicechange "github.com/onosproject/onos-config/api/types/change/device"
 	devicechanges "github.com/onosproject/onos-config/pkg/store/change/device"
 	"github.com/stretchr/testify/assert"
@@ -39,15 +40,19 @@ func TestReconciler_computeRollback_singleUpdate(t *testing.T) {
 			ID:    types.ID(fmt.Sprintf("%s-if%d-change", device1, 1)),
 			Index: types.Index(2),
 		},
+		Status: change.Status{
+			Phase: change.Phase_ROLLBACK,
+		},
 		Change: &devicechange.Change{
 			DeviceID:      device1,
 			DeviceVersion: v1,
 			DeviceType:    stratumType,
 			Values: []*devicechange.ChangeValue{
 				{
-					Path:    eth1Enabled,
-					Value:   devicechange.NewTypedValueBool(true),
-					Removed: false,
+					Path:      eth1Enabled,
+					Value:     devicechange.NewTypedValueBool(true),
+					Removed:   false,
+					PrevIndex: 1,
 				},
 			},
 		},
@@ -73,10 +78,13 @@ func TestReconciler_computeRollback_mixedUpdate(t *testing.T) {
 	defer deviceChangesStore.Close()
 
 	deviceChangeIf1Change := &devicechange.DeviceChange{
-		Index: 1,
+		Index: 2,
 		NetworkChange: devicechange.NetworkChangeRef{
-			ID:    types.ID(fmt.Sprintf("%s-if%d-change", device1, 1)),
-			Index: types.Index(1),
+			ID:    types.ID(fmt.Sprintf("%s-if%d-change", device1, 2)),
+			Index: types.Index(2),
+		},
+		Status: change.Status{
+			Phase: change.Phase_ROLLBACK,
 		},
 		Change: &devicechange.Change{
 			DeviceID:      device1,
@@ -84,13 +92,15 @@ func TestReconciler_computeRollback_mixedUpdate(t *testing.T) {
 			DeviceType:    stratumType,
 			Values: []*devicechange.ChangeValue{
 				{
-					Path:    eth1Enabled,
-					Value:   devicechange.NewTypedValueBool(true),
-					Removed: false,
+					Path:      eth1Enabled,
+					Value:     devicechange.NewTypedValueBool(true),
+					Removed:   false,
+					PrevIndex: 1,
 				},
 				{
-					Path:    eth1Hi,
-					Removed: true,
+					Path:      eth1Hi,
+					Removed:   true,
+					PrevIndex: 1,
 				},
 				{
 					Path:  eth1Desc,
@@ -134,10 +144,13 @@ func TestReconciler_computeRollback_addInterface(t *testing.T) {
 	assert.NoError(t, err)
 
 	deviceChangeIf2Add := &devicechange.DeviceChange{
-		Index: 1,
+		Index: 2,
 		NetworkChange: devicechange.NetworkChangeRef{
 			ID:    types.ID(fmt.Sprintf("%s-if%d-add", device1, 2)),
-			Index: types.Index(1),
+			Index: types.Index(2),
+		},
+		Status: change.Status{
+			Phase: change.Phase_ROLLBACK,
 		},
 		Change: &devicechange.Change{
 			DeviceID:      device1,
@@ -195,10 +208,13 @@ func TestReconciler_computeRollback_removeInterface(t *testing.T) {
 	assert.NoError(t, err)
 
 	deviceChangeIf2Delete := &devicechange.DeviceChange{
-		Index: 1,
+		Index: 3,
 		NetworkChange: devicechange.NetworkChangeRef{
-			ID:    types.ID(fmt.Sprintf("%s-if%d-delete", device1, 2)),
-			Index: types.Index(1),
+			ID:    types.ID(fmt.Sprintf("%s-if%d-delete", device1, 3)),
+			Index: types.Index(3),
+		},
+		Status: change.Status{
+			Phase: change.Phase_ROLLBACK,
 		},
 		Change: &devicechange.Change{
 			DeviceID:      device1,
@@ -206,8 +222,9 @@ func TestReconciler_computeRollback_removeInterface(t *testing.T) {
 			DeviceType:    stratumType,
 			Values: []*devicechange.ChangeValue{
 				{
-					Path:    eth2Base,
-					Removed: true,
+					Path:      eth2Base,
+					Removed:   true,
+					PrevIndex: 2,
 				},
 			},
 		},
