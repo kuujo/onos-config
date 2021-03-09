@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	devicechange "github.com/onosproject/onos-api/go/onos/config/change/device"
 	devicetype "github.com/onosproject/onos-api/go/onos/config/device"
@@ -162,6 +163,14 @@ func NewModelRegistry(config Config, plugins ...*ModelPlugin) (*ModelRegistry, e
 		modelName := utils.ToModelName(devicetype.Type(plugin.Info.Name), devicetype.Version(plugin.Info.Version))
 		registry.plugins[modelName] = plugin
 	}
+	go func() {
+		for {
+			if err := registry.loadPlugins(); err != nil {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+	}()
 	return registry, nil
 }
 
@@ -227,20 +236,22 @@ func (r *ModelRegistry) loadPlugins() error {
 	for _, modelInfo := range modelInfos {
 		modelName := utils.ToModelName(devicetype.Type(modelInfo.Name), devicetype.Version(modelInfo.Version))
 		if _, ok := r.plugins[modelName]; !ok {
-			plugin, err := r.loadPlugin(modelInfo)
-			if err != nil {
-				return err
+			plugin, loadErr := r.loadPlugin(modelInfo)
+			if loadErr != nil {
+				err = loadErr
+			} else {
+				r.plugins[modelName] = plugin
 			}
-			r.plugins[modelName] = plugin
 		}
 	}
-	return nil
+	return err
 }
 
 func (r *ModelRegistry) loadPlugin(modelInfo configmodel.ModelInfo) (*ModelPlugin, error) {
 	entry := r.cache.Entry(modelInfo.Plugin.Name, modelInfo.Plugin.Version)
 	err := entry.RLock(context.Background())
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
@@ -248,14 +259,17 @@ func (r *ModelRegistry) loadPlugin(modelInfo configmodel.ModelInfo) (*ModelPlugi
 		_ = entry.RUnlock(context.Background())
 	}()
 
+	log.Infof("Loading plugin %s/%s", modelInfo.Name, modelInfo.Version)
 	plugin, err := entry.Load()
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	model := plugin.Model()
 	schema, err := model.Schema()
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 

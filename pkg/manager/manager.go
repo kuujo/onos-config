@@ -17,9 +17,6 @@ package manager
 
 import (
 	"fmt"
-	"github.com/onosproject/onos-config/pkg/store/change/device/rbac"
-	"sync"
-
 	devicechange "github.com/onosproject/onos-api/go/onos/config/change/device"
 	devicetype "github.com/onosproject/onos-api/go/onos/config/device"
 	"github.com/onosproject/onos-config/pkg/controller"
@@ -34,6 +31,7 @@ import (
 	"github.com/onosproject/onos-config/pkg/southbound"
 	"github.com/onosproject/onos-config/pkg/southbound/synchronizer"
 	"github.com/onosproject/onos-config/pkg/store/change/device"
+	"github.com/onosproject/onos-config/pkg/store/change/device/rbac"
 	"github.com/onosproject/onos-config/pkg/store/change/device/state"
 	"github.com/onosproject/onos-config/pkg/store/change/network"
 	devicestore "github.com/onosproject/onos-config/pkg/store/device"
@@ -45,6 +43,7 @@ import (
 	"github.com/onosproject/onos-lib-go/pkg/logging"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"sync"
 )
 
 var mgr Manager
@@ -114,7 +113,6 @@ func NewManager(leadershipStore leadership.Store, mastershipStore mastership.Sto
 	} else {
 		log.Infof("Loaded model registry with %d plugins", len(plugins))
 	}
-
 	return &mgr
 }
 
